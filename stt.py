@@ -35,7 +35,7 @@ class VoiceMessage:
         self.recognition_audio: [RecognitionAudio, None] = None
         self.recognition_config: [RecognitionConfig, None] = None
 
-    def _generate_audio(self):
+    def _generate_recognition_audio(self):
         raise NotImplementedError('this method must be overridden')
 
     def _recognize_short(self, timeout=360) -> [RecognizeResponse, None]:
@@ -58,7 +58,7 @@ class VoiceMessage:
         return response
 
     def recognize(self, *args, **kwargs) -> List[SpeechRecognitionAlternative]:
-        self._generate_audio()
+        self._generate_recognition_audio()
 
         # noinspection PyTypeChecker
         self.recognition_config = RecognitionConfig(
@@ -93,7 +93,7 @@ class VoiceMessage:
 
 
 class VoiceMessageLocal(VoiceMessage):
-    def _generate_audio(self):
+    def _generate_recognition_audio(self):
         with io.open(self.file_path, "rb") as audio_file:
             # noinspection PyTypeChecker
             self.recognition_audio = RecognitionAudio(content=audio_file.read())
@@ -106,16 +106,16 @@ class VoiceMessageRemote(VoiceMessage):
         self.bucket_name = bucket_name
         self.storage_client = storage_client
         self.bucket = None
-        self.gcs_uri = None
+        self.gcs_uri = 'gs://{}/{}'.format(self.bucket_name, self.file_name)   # we can already compose it here
 
-    def _generate_audio(self):
+    def _generate_recognition_audio(self):
+        # noinspection PyTypeChecker
         self.recognition_audio = RecognitionAudio(uri=self.gcs_uri)
 
     def _upload_blob(self):
         blob = self.bucket.blob(self.file_name)
 
         blob.upload_from_filename(self.file_name)
-        self.gcs_uri = 'gs://{}/{}'.format(self.bucket_name, self.file_name)
 
     def _delete_blob(self):
         blob = self.bucket.blob(self.file_name)
