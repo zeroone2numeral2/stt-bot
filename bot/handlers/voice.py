@@ -43,9 +43,11 @@ def on_voice_message_private_chat(update: Update, *args, **kwargs):
     logger.info('voice message in a private chat')
 
     if config.google.bucket_name:
-        voice = VoiceMessageRemote.from_message(update.message, bucket_name=config.google.bucket_name)
+        logger.info('using remote storage')
+        voice = VoiceMessageRemote.from_message(update.message, bucket_name=config.google.bucket_name, download=True)
     else:
-        voice = VoiceMessageLocal.from_message(update.message)
+        logger.info('using local storage')
+        voice = VoiceMessageLocal.from_message(update.message, download=True)
 
     if voice.short:
         text = "<i>Inizio trascrizione...</i>"
@@ -55,6 +57,13 @@ def on_voice_message_private_chat(update: Update, *args, **kwargs):
     message_to_edit = update.message.reply_html(text)
 
     result: List[SpeechRecognitionAlternative] = voice.recognize()
+
+    if not result:
+        # message_to_edit.delete()
+        message_to_edit.edit_text('<i>Impossibile trascrivere messaggio vocale</i>', parse_mode=ParseMode.HTML)
+        logger.warning('request for voice message %s returned empty response', voice.file_path)
+        # do not cleanup the file
+        return
 
     alternative = result[0]
     transcription = '<i>{}</i> [{}]'.format(alternative.confidence, alternative.confidence)
@@ -66,6 +75,9 @@ def on_voice_message_private_chat(update: Update, *args, **kwargs):
         disable_notification=True,
         quote=True
     )
+
+    if config.misc.remove_downloaded_files:
+        voice.cleanup()
 
 
 stickersbot.add_handler(MessageHandler(Filters.private & Filters.voice & ~Filters.forwarded, on_voice_message_private_chat))

@@ -1,5 +1,6 @@
 import io
 import os
+import logging
 from typing import List
 
 # noinspection PyPackageRequirements
@@ -18,6 +19,8 @@ from telegram import Message
 
 from google.clients import speech_client
 from google.clients import storage_client
+
+logger = logging.getLogger(__name__)
 
 
 class VoiceMessage:
@@ -43,7 +46,7 @@ class VoiceMessage:
             self.short = False
 
     @classmethod
-    def from_message(cls, message: Message, *args, **kwargs):
+    def from_message(cls, message: Message, download=False, *args, **kwargs):
         if not message.voice:
             raise AttributeError("Message object must contain a voice message")
 
@@ -52,12 +55,17 @@ class VoiceMessage:
 
         file_name = "{}_{}.ogg".format(message.chat.id, message.message_id)
 
-        return cls(
+        voice = cls(
             file_name=file_name,
             duration=message.voice.duration,
             *args,
             **kwargs
         )
+
+        telegram_file = message.voice.get_file()
+        telegram_file.download(voice.file_path)
+
+        return voice
 
     def _generate_recognition_audio(self):
         raise NotImplementedError("this method must be overridden")
@@ -95,9 +103,15 @@ class VoiceMessage:
         )
 
         if not self.short:
+            logger.debug('using long running operation')
             response: RecognizeResponse = self._recognize_long(*args, **kwargs)
         else:
+            logger.debug('using standard operation')
             response: RecognizeResponse = self._recognize_short(*args, **kwargs)
+
+        if not response:
+            logger.warning('no response')
+            return
 
         transcriptions = list()
 
@@ -137,12 +151,12 @@ class VoiceMessageRemote(VoiceMessage):
         self.recognition_audio = RecognitionAudio(uri=self.gcs_uri)
 
     def _upload_blob(self):
-        blob = self.bucket.blob(self.file_name)
+        blob = self.bucket.blob(self.file_path)
 
-        blob.upload_from_filename(self.file_name)
+        blob.upload_from_filename(self.file_path)
 
     def _delete_blob(self):
-        blob = self.bucket.blob(self.file_name)
+        blob = self.bucket.blob(self.file_path)
 
         blob.delete()
 

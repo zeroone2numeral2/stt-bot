@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 stickersbot = VoiceMessagesBot(
     token=config.telegram.token,
     use_context=True,
-    persistence=utilities.persistence_object(config.telegram.persistence) if config.telegram.persistency else None,
+    persistence=utilities.persistence_object(config.telegram.persistence) if config.telegram.persistence else None,
 )
 
 

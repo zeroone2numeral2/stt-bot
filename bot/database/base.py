@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from config import config
 
 
-engine = create_engine(config.sqlite.engine_string)
+engine = create_engine(config.database.engine_string)
 SessionClass = sessionmaker(bind=engine)
 
 
