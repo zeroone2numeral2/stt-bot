@@ -154,5 +154,3 @@ class VoiceMessageRemote(VoiceMessage):
             self._delete_blob()
 
         super(VoiceMessageRemote, self).cleanup()
-
-

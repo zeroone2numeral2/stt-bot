@@ -115,7 +115,7 @@ def main_streaming(file_name):
 
     client = SpeechClient.from_service_account_json('./speech-recognition-bot-2e6b405bf854.json')
 
-    with io.open('voice/io_16.ogg', "rb") as audio_file:
+    with io.open('downloads/io_16.ogg', "rb") as audio_file:
         content = audio_file.read()
 
     # In practice, stream should be a generator yielding chunks of audio data.
@@ -155,4 +155,4 @@ def main_streaming(file_name):
 
 
 if __name__ == '__main__':
-    main_long('voice/gianni_107.ogg')
+    main_long('downloads/gianni_107.ogg')
