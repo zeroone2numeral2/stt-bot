@@ -151,8 +151,10 @@ class VoiceMessageRemote(VoiceMessage):
 
         return super(VoiceMessageRemote, self).recognize(*args, **kwargs)
 
-    def cleanup(self):
-        self._delete_blob()
+    def cleanup(self, remove_from_bucket=True):
+        if remove_from_bucket:
+            self._delete_blob()
+
         super(VoiceMessageRemote, self).cleanup()
 
 
