@@ -3,7 +3,7 @@ import os
 from typing import List
 
 # noinspection PyPackageRequirements
-from google.cloud import storage
+from google.cloud.storage import Client as StorageClient
 # noinspection PyPackageRequirements
 from google.cloud.speech import (
     SpeechClient,
@@ -16,8 +16,8 @@ from google.cloud.speech import (
 # noinspection PyPackageRequirements
 from telegram import Message
 
-speech_client = SpeechClient.from_service_account_json('./speech-recognition-bot-2e6b405bf854.json')
-storage_client = storage.Client.from_service_account_json('./speech-recognition-bot-2e6b405bf854.json')
+from google.clients import speech_client
+from google.clients import storage_client
 
 
 class VoiceMessage:
@@ -33,7 +33,7 @@ class VoiceMessage:
         self.file_name = file_name
         self.file_path = os.path.join(download_dir, self.file_name)
         self.duration = duration
-        self.client = speech_client
+        self.client: SpeechClient = speech_client
         self.max_alternatives = max_alternatives
         self.recognition_audio: [RecognitionAudio, None] = None
         self.recognition_config: [RecognitionConfig, None] = None
@@ -124,7 +124,7 @@ class VoiceMessageRemote(VoiceMessage):
         super(VoiceMessageRemote, self).__init__(*args, **kwargs)
 
         self.bucket_name = bucket_name
-        self.storage_client = storage_client
+        self.storage_client: StorageClient = storage_client
         self.bucket = None
         self.gcs_uri = "gs://{}/{}".format(self.bucket_name, self.file_name)   # we can already compose it here
 
