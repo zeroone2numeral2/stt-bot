@@ -2,14 +2,19 @@ import io
 import os
 from typing import List
 
+# noinspection PyPackageRequirements
 from google.cloud import storage
-from google.cloud.speech import SpeechClient
-from google.cloud.speech import RecognitionConfig
-from google.cloud.speech import RecognitionAudio
-from google.cloud.speech import RecognizeResponse
-from google.cloud.speech import SpeechRecognitionResult
-from google.cloud.speech import SpeechRecognitionAlternative
-
+# noinspection PyPackageRequirements
+from google.cloud.speech import (
+    SpeechClient,
+    RecognitionConfig,
+    RecognitionAudio,
+    RecognizeResponse,
+    SpeechRecognitionResult,
+    SpeechRecognitionAlternative
+)
+# noinspection PyPackageRequirements
+from telegram import Message
 
 # bucket_name = 'speech-recognition-bot-storage'
 
@@ -21,22 +26,39 @@ class VoiceMessage:
     LANGUAGE = "it-IT"
     OPUS_HERTZ_RATE = 48000
 
-    def __init__(self, file_name, duration, max_alternatives=None):
+    def __init__(self, file_name, duration: int, download_dir='downloads', max_alternatives: [int, None] = None):
         if duration is None:
-            raise ValueError('the voice message duration must be provided')
+            raise ValueError("the voice message duration must be provided")
         elif max_alternatives is not None:
             raise NotImplementedError
 
         self.file_name = file_name
-        self.file_path = os.path.join('voices', self.file_name)
+        self.file_path = os.path.join(download_dir, self.file_name)
         self.duration = duration
         self.client = speech_client
         self.max_alternatives = max_alternatives
         self.recognition_audio: [RecognitionAudio, None] = None
         self.recognition_config: [RecognitionConfig, None] = None
 
+    @classmethod
+    def from_message(cls, message: Message, *args, **kwargs):
+        if not message.voice:
+            raise AttributeError("Message object must contain a voice message")
+
+        if message.voice.duration is None:
+            raise ValueError("message.Voice must contain its duration")
+
+        file_name = "{}_{}.ogg".format(message.chat.id, message.message_id)
+
+        return cls(
+            file_name=file_name,
+            duration=message.voice.duration,
+            *args,
+            **kwargs
+        )
+
     def _generate_recognition_audio(self):
-        raise NotImplementedError('this method must be overridden')
+        raise NotImplementedError("this method must be overridden")
 
     def _recognize_short(self, timeout=360) -> [RecognizeResponse, None]:
         response: RecognizeResponse = self.client.recognize(
@@ -106,7 +128,7 @@ class VoiceMessageRemote(VoiceMessage):
         self.bucket_name = bucket_name
         self.storage_client = storage_client
         self.bucket = None
-        self.gcs_uri = 'gs://{}/{}'.format(self.bucket_name, self.file_name)   # we can already compose it here
+        self.gcs_uri = "gs://{}/{}".format(self.bucket_name, self.file_name)   # we can already compose it here
 
     def _generate_recognition_audio(self):
         # noinspection PyTypeChecker
