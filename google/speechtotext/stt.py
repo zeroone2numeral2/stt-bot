@@ -33,10 +33,14 @@ class VoiceMessage:
         self.file_name = file_name
         self.file_path = os.path.join(download_dir, self.file_name)
         self.duration = duration
+        self.short = True
         self.client: SpeechClient = speech_client
         self.max_alternatives = max_alternatives
         self.recognition_audio: [RecognitionAudio, None] = None
         self.recognition_config: [RecognitionConfig, None] = None
+
+        if self.duration > 59:
+            self.short = False
 
     @classmethod
     def from_message(cls, message: Message, *args, **kwargs):
@@ -90,7 +94,7 @@ class VoiceMessage:
             profanity_filter=False
         )
 
-        if self.duration > 59:
+        if not self.short:
             response: RecognizeResponse = self._recognize_long(*args, **kwargs)
         else:
             response: RecognizeResponse = self._recognize_short(*args, **kwargs)

@@ -1,6 +1,15 @@
 [telegram]
 token = ""
+persistence = "" # keep empty to disable percistency of temporary data (chat_data/user_data)
+silence_exceptions_private = false
+silence_exceptions_group = false
 
 [google]
 service_account_json = ""
 bucket_name = "" # optional, in case we want to upload voice notes to a remote google storage bucket
+
+[misc]
+remove_downloaded_files = true
+
+[database]
+engine_string = "sqlite:///bot.db"

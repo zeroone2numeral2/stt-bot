@@ -1,6 +1,13 @@
-*.ogg
-*.json
-ffmpeg.exe
 venv/
 .idea/
+
+*.ogg
+*.json
+!logging.json
+*.pickle
+*.db
+*.sqlite
+*.sqlite3
+
+ffmpeg.exe
 config.toml

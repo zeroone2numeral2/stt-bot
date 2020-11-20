@@ -1,2 +1,5 @@
+toml
+sqlalchemy
 google-cloud-speech
 google-cloud-storage
+python-telegram-bot==13.0
