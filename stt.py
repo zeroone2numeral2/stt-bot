@@ -16,8 +16,6 @@ from google.cloud.speech import (
 # noinspection PyPackageRequirements
 from telegram import Message
 
-# bucket_name = 'speech-recognition-bot-storage'
-
 speech_client = SpeechClient.from_service_account_json('./speech-recognition-bot-2e6b405bf854.json')
 storage_client = storage.Client.from_service_account_json('./speech-recognition-bot-2e6b405bf854.json')
 

@@ -1,0 +1,6 @@
+[telegram]
+token = ""
+
+[google]
+service_account_json = ""
+bucket_name = "" # optional, in case we want to upload voice notes to a remote google storage bucket
