@@ -74,6 +74,13 @@ class VoiceMessage:
 
         return voice
 
+    @property
+    def hertz_rate_str(self):
+        if self.hertz_rate is None:
+            raise ValueError("hertz rate is None")
+
+        return f"{self.hertz_rate / 1000}kHz"
+
     def _generate_recognition_audio(self):
         raise NotImplementedError("this method must be overridden")
 
