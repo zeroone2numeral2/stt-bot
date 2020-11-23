@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 sttbot = VoiceMessagesBot(
     token=config.telegram.token,
     use_context=True,
+    workers=config.telegram.get("workers", 4),
     persistence=utilities.persistence_object(config.telegram.persistence) if config.telegram.persistence else None,
 )
 
