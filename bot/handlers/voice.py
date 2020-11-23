@@ -22,7 +22,7 @@ from telegram import (
     Update, ParseMode, Message
 )
 
-from bot import stickersbot
+from bot import sttbot
 from bot.decorators import decorators
 from bot.database.models.user import User
 from bot.utilities import utilities
@@ -157,14 +157,14 @@ def on_voice_message_group_chat(update: Update, _, session: Session, user: User,
         )
 
 
-stickersbot.add_handler(MessageHandler(
+sttbot.add_handler(MessageHandler(
     Filters.private & Filters.voice & ~Filters.forwarded,
     on_voice_message_private_chat,
     run_async=True
 ))
-stickersbot.add_handler(MessageHandler(
+sttbot.add_handler(MessageHandler(
     Filters.private & Filters.voice & Filters.forwarded,
     on_voice_message_private_chat_forwarded,
     run_async=True
 ))
-stickersbot.add_handler(MessageHandler(Filters.group & Filters.voice, on_voice_message_group_chat, run_async=True))
+sttbot.add_handler(MessageHandler(Filters.group & Filters.voice, on_voice_message_group_chat, run_async=True))

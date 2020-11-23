@@ -13,7 +13,7 @@ from telegram import (
     Update
 )
 
-from bot import stickersbot
+from bot import sttbot
 from bot.database.models.user import User
 from bot.decorators import decorators
 from config import config
@@ -34,4 +34,4 @@ def on_start_command(update: Update, _, session: [Session, None], user: [User, N
     update.message.reply_html(TEXT, disable_web_page_preview=True)
 
 
-stickersbot.add_handler(CommandHandler('start', on_start_command, filters=Filters.private))
+sttbot.add_handler(CommandHandler('start', on_start_command, filters=Filters.private))

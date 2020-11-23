@@ -13,7 +13,7 @@ from config import config
 
 logger = logging.getLogger(__name__)
 
-stickersbot = VoiceMessagesBot(
+sttbot = VoiceMessagesBot(
     token=config.telegram.token,
     use_context=True,
     persistence=utilities.persistence_object(config.telegram.persistence) if config.telegram.persistence else None,
@@ -23,8 +23,8 @@ stickersbot = VoiceMessagesBot(
 def main():
     utilities.load_logging_config('logging.json')
 
-    stickersbot.import_handlers(r'bot/handlers/')
-    stickersbot.run(clean=True)
+    sttbot.import_handlers(r'bot/handlers/')
+    sttbot.run(clean=True)
 
 
 if __name__ == '__main__':

@@ -13,7 +13,7 @@ from telegram import (
     Update, ParseMode
 )
 
-from bot import stickersbot
+from bot import sttbot
 from bot.markups import InlineKeyboard
 from bot.database.models.user import User
 from bot.decorators import decorators
@@ -106,7 +106,7 @@ def on_tos_revoke_button(update: Update, _, session: [Session, None], user: [Use
     )
 
 
-stickersbot.add_handler(CommandHandler('tos', on_tos_command, filters=Filters.private))
-stickersbot.add_handler(CallbackQueryHandler(on_tos_show_button, pattern=r"tos:show"))
-stickersbot.add_handler(CallbackQueryHandler(on_tos_agree_button, pattern=r"tos:agree"))
-stickersbot.add_handler(CallbackQueryHandler(on_tos_revoke_button, pattern=r"tos:revoke"))
+sttbot.add_handler(CommandHandler('tos', on_tos_command, filters=Filters.private))
+sttbot.add_handler(CallbackQueryHandler(on_tos_show_button, pattern=r"tos:show"))
+sttbot.add_handler(CallbackQueryHandler(on_tos_agree_button, pattern=r"tos:agree"))
+sttbot.add_handler(CallbackQueryHandler(on_tos_revoke_button, pattern=r"tos:revoke"))
