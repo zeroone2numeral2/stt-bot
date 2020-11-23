@@ -25,8 +25,10 @@ logger = logging.getLogger(__name__)
 
 class VoiceMessage:
     LANGUAGE = "it-IT"
-    OPUS_HERTZ_RATE_LONG = 48000
-    OPUS_HERTZ_RATE_SHORT = 16000
+    # opus hertz rate should always be 48000, but for some reasons google's api sometimes work only when 16000 hertz is
+    # specified. This probably depends on the device the voice message has been recorded from, although ffmpeg
+    # always says the hertz rate is 48000
+    OPUS_HERTZ_RATE = [16000, 48000]
 
     def __init__(self, file_name, duration: int, download_dir='downloads', max_alternatives: [int, None] = None):
         if duration is None:
@@ -38,7 +40,7 @@ class VoiceMessage:
         self.file_path = os.path.join(download_dir, self.file_name)
         self.duration = duration
         self.short = True
-        self.hertz_rate = self.OPUS_HERTZ_RATE_SHORT
+        self.hertz_rate = self.OPUS_HERTZ_RATE[0]
         self.client: SpeechClient = speech_client
         self.max_alternatives = max_alternatives
         self.recognition_audio: [RecognitionAudio, None] = None
@@ -46,10 +48,6 @@ class VoiceMessage:
 
         if self.duration > 59:
             self.short = False
-            # hertz rate for opus-encoded files should always be 48.000 (ffmpeg -i filename.ogg), but for
-            # some reason google's api, with short operations, only works when you
-            # pass 16.000 as value (or 24.000 but it doesn't work good)
-            self.hertz_rate = self.OPUS_HERTZ_RATE_LONG
 
     @classmethod
     def from_message(cls, message: Message, download=False, *args, **kwargs):
@@ -77,6 +75,8 @@ class VoiceMessage:
         raise NotImplementedError("this method must be overridden")
 
     def _recognize_short(self, timeout=360) -> [RecognizeResponse, None]:
+        logger.debug("standard operation, timeout: %d", timeout)
+
         response: RecognizeResponse = self.client.recognize(
             config=self.recognition_config,
             audio=self.recognition_audio,
@@ -86,6 +86,8 @@ class VoiceMessage:
         return response
 
     def _recognize_long(self, timeout=360) -> [RecognizeResponse, None]:
+        logger.debug("long running operation, timeout: %d", timeout)
+
         operation = self.client.long_running_recognize(
             config=self.recognition_config,
             audio=self.recognition_audio
@@ -109,15 +111,17 @@ class VoiceMessage:
         )
 
         if not self.short:
-            logger.debug('using long running operation')
+            logger.debug("using long running operation")
             response: RecognizeResponse = self._recognize_long(*args, **kwargs)
         else:
-            logger.debug('using standard operation')
+            logger.debug("using standard operation")
             response: RecognizeResponse = self._recognize_short(*args, **kwargs)
 
         if not response:
-            logger.warning('no response')
+            logger.warning("no response")
             return
+        else:
+            logger.debug("response received")
 
         transcriptions = list()
 
