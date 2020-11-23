@@ -25,6 +25,7 @@ from telegram import (
 from bot import stickersbot
 from bot.decorators import decorators
 from bot.database.models.user import User
+from bot.utilities import utilities
 from google.speechtotext import VoiceMessageLocal
 from google.speechtotext import VoiceMessageRemote
 from config import config
@@ -53,7 +54,7 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
 
     alternative = result[0]
-    transcription = f"<i>{alternative.transcript}</i> <b>[{round(alternative.confidence, 2)}]</b>"
+    transcription = f"\"<i>{alternative.transcript}</i>\" <b>[{round(alternative.confidence, 2)}]</b>"
 
     if config.misc.remove_downloaded_files:
         voice.cleanup()
@@ -88,17 +89,20 @@ def on_voice_message_private_chat(update: Update, *args, **kwargs):
 def on_voice_message_private_chat_forwarded(update: Update, _, session: Session, user: User):
     logger.info("forwarded voice message in a private chat")
 
-    if not update.message.forward_from and update.message.forward_sender_name:
-        logger.info("forwarded message: original sender hidden their account")
-        update.message.reply_html(TEXT_HIDDEN_SENDER)
-        return
-    else:
-        user: [User, None] = session.query(User).filter(User.user_id == update.message.forward_from.id).one_or_none()
-        if not user or not user.tos_accepted:
-            logger.info("forwarded message: no user in db, or user did not accept tos")
-            update.message.reply_html("<i>Mi dispiace, il mittente di questo messaggio non ha acconsentito al trattamento dei suoi dati</i>", quote=True)
+    if not utilities.is_admin(update.effective_user):
+        if not update.message.forward_from and update.message.forward_sender_name:
+            logger.info("forwarded message: original sender hidden their account")
+            update.message.reply_html(TEXT_HIDDEN_SENDER)
             return
-
+        else:
+            user: [User, None] = session.query(User).filter(User.user_id == update.message.forward_from.id).one_or_none()
+            if not user or not user.tos_accepted:
+                logger.info("forwarded message: no user in db, or user did not accept tos")
+                update.message.reply_html(
+                    "<i>Mi dispiace, il mittente di questo messaggio non ha acconsentito al trattamento dei suoi dati</i>",
+                    quote=True
+                )
+                return
 
     voice = VoiceMessageLocal.from_message(update.message, download=True)
 

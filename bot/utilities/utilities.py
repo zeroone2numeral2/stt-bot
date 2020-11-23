@@ -7,7 +7,10 @@ from pickle import UnpicklingError
 from html import escape
 
 # noinspection PyPackageRequirements
+from telegram import User
 from telegram.ext import PicklePersistence
+
+from config import config
 
 logger = logging.getLogger(__name__)
 
@@ -43,3 +46,7 @@ def persistence_object(file_path='persistence/data.pickle'):
 
 def escape_html(*args, **kwargs):
     return escape(*args, **kwargs)
+
+
+def is_admin(user: User) -> bool:
+    return user.id in config.telegram.admins

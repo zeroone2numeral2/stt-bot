@@ -1,4 +1,5 @@
 import io
+import logging
 
 import wave
 from google.cloud import storage
@@ -13,6 +14,12 @@ from google.cloud.speech import StreamingRecognizeRequest
 from google.cloud.speech import StreamingRecognitionConfig
 
 bucketname = 'speech-recognition-bot-storage'
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.DEBUG
+)
+logger = logging.getLogger(__name__)
 
 
 def frame_rate_channel(audio_file_name):
@@ -66,10 +73,12 @@ def main_long(file_name, use_bucket=False):
     )
 
     operation = client.long_running_recognize(config=config, audio=audio)
+
     print("Waiting for operation to complete...")
     response = operation.result(timeout=360)
     print('...ended')
-    print(response)
+
+    # print(response)
 
     # Each result is for a consecutive portion of the audio. Iterate through
     # them to get the transcripts for the entire audio file.
@@ -86,27 +95,16 @@ def main(file_name, use_bucket=False):
 
     client = SpeechClient.from_service_account_json('./speech-recognition-bot-2e6b405bf854.json')
 
-    if use_bucket:
-        gcs_file_name = 'current_voice.ogg'
-        upload_blob(bucketname, file_name, gcs_file_name)
-        gcs_uri = 'gs://' + bucketname + '/' + gcs_file_name
-
-        audio = RecognitionAudio(uri=gcs_uri)
-    else:
-        with io.open(file_name, "rb") as audio_file:
-            content = audio_file.read()
-            audio = RecognitionAudio(content=content)
-
     with io.open(file_name, "rb") as audio_file:
         content = audio_file.read()
         audio = RecognitionAudio(content=content)
 
     SAMPLE_RATE_HERTZ = [8000, 12000, 16000, 24000, 48000]
-
+    # SAMPLE_RATE_HERTZ = [48000]
 
     for hertz in SAMPLE_RATE_HERTZ:
         print("-" * 100)
-        print(hertz)
+        print('hertz:', hertz)
         config = RecognitionConfig(
             encoding=RecognitionConfig.AudioEncoding.OGG_OPUS,
             sample_rate_hertz=hertz,
@@ -128,48 +126,5 @@ def main(file_name, use_bucket=False):
                 print('', '', "transcript [{}]: {}".format(round(alternative.confidence, 2), alternative.transcript))
 
 
-def main_streaming(file_name):
-
-    client = SpeechClient.from_service_account_json('./speech-recognition-bot-2e6b405bf854.json')
-
-    with io.open('downloads/io_16.ogg', "rb") as audio_file:
-        content = audio_file.read()
-
-    # In practice, stream should be a generator yielding chunks of audio data.
-    stream = [content]
-
-    requests = (
-        StreamingRecognizeRequest(audio_content=chunk) for chunk in stream
-    )
-
-    config = RecognitionConfig(
-        encoding=RecognitionConfig.AudioEncoding.OGG_OPUS,
-        sample_rate_hertz=48000,
-        language_code="it-IT",
-        enable_automatic_punctuation=True,
-    )
-
-    streaming_config = StreamingRecognitionConfig(config=config)
-
-    # streaming_recognize returns a generator.
-    responses = client.streaming_recognize(
-        config=streaming_config,
-        requests=requests,
-    )
-
-    for response in responses:
-        # Once the transcription has settled, the first result will contain the
-        # is_final result. The other results will be for subsequent portions of
-        # the audio.
-        for result in response.results:
-            print("Finished: {}".format(result.is_final))
-            print("Stability: {}".format(result.stability))
-            alternatives = result.alternatives
-            # The alternatives are ordered from most likely to least.
-            for alternative in alternatives:
-                print("Confidence: {}".format(alternative.confidence))
-                print(u"Transcript: {}".format(alternative.transcript))
-
-
 if __name__ == '__main__':
-    main('downloads/23646077_12530.ogg')
+    main('downloads/23646077_12611.ogg')
