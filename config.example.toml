@@ -1,6 +1,7 @@
 [telegram]
 token = ""
 persistence = "" # keep empty to disable percistency of temporary data (chat_data/user_data)
+workers = 4
 admins = [23646077]
 silence_exceptions_private = false
 silence_exceptions_group = false

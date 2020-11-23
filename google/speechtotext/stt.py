@@ -2,7 +2,8 @@ import io
 import os
 import logging
 import struct
-from typing import List
+import time
+from typing import List, Tuple, Union
 
 # noinspection PyPackageRequirements
 from google.cloud.storage import Client as StorageClient
@@ -13,8 +14,11 @@ from google.cloud.speech import (
     RecognitionAudio,
     RecognizeResponse,
     SpeechRecognitionResult,
-    SpeechRecognitionAlternative
+    SpeechRecognitionAlternative,
+    LongRunningRecognizeRequest,
+    LongRunningRecognizeResponse
 )
+# from google.longrunning.operations_proto import Operation
 # noinspection PyPackageRequirements
 from telegram import Message
 # from tinytag import TinyTag
@@ -53,7 +57,7 @@ class VoiceMessage:
             self.short = False
 
     @classmethod
-    def from_message(cls, message: Message, download=False, *args, **kwargs):
+    def from_message(cls, message: Message, *args, **kwargs):
         if not message.voice:
             raise AttributeError("Message object must contain a voice message")
 
@@ -79,12 +83,12 @@ class VoiceMessage:
         if self.hertz_rate is None:
             raise ValueError("hertz rate is None")
 
-        return f"{self.hertz_rate / 1000}kHz"
+        return f"{int(self.hertz_rate / 1000)}kHz"
 
     def _generate_recognition_audio(self):
         raise NotImplementedError("this method must be overridden")
 
-    def _recognize_short(self, timeout=360) -> [RecognizeResponse, None]:
+    def _recognize_short(self, timeout=360) -> Tuple[Union[str, None], Union[float, None]]:
         logger.debug("standard operation, timeout: %d", timeout)
 
         response: RecognizeResponse = self.client.recognize(
@@ -93,9 +97,16 @@ class VoiceMessage:
             timeout=timeout
         )
 
-        return response
+        if not response:
+            logger.warning("no response")
+            return None, None
 
-    def _recognize_long(self, timeout=360) -> [RecognizeResponse, None]:
+        result: SpeechRecognitionResult
+        for result in response.results:
+            best_alternative: SpeechRecognitionAlternative = result.alternatives[0]
+            return best_alternative.transcript, round(best_alternative.confidence, 2)
+
+    def _recognize_long(self, timeout=360) -> Tuple[Union[str, None], Union[float, None]]:
         logger.debug("long running operation, timeout: %d", timeout)
 
         operation = self.client.long_running_recognize(
@@ -103,12 +114,36 @@ class VoiceMessage:
             audio=self.recognition_audio
         )
 
-        response: RecognizeResponse = operation.result(timeout=timeout)
+        """print(dir(operation))
 
-        return response
+        for i in range(12):
+            time.sleep(2)
+            print(operation_current_status.metadata, operation_current_status.done)
+            if operation_current_status.done is True:
+                break"""
+
+        response: LongRunningRecognizeResponse = operation.result(timeout=timeout)
+
+        if not response:
+            logger.warning("no response")
+            return None, None
+
+        transcript = ""
+        confidences = []
+
+        result: SpeechRecognitionResult
+        for result in response.results:
+            best_alternative: SpeechRecognitionAlternative = result.alternatives[0]
+            transcript += " " + best_alternative.transcript
+            confidences.append(best_alternative.confidence)
+
+        average_confidence = sum(confidences) / len(confidences)
+
+        return transcript.strip(), round(average_confidence, 2)
 
     def _read_sample_rate(self):
-        # for this to work, we need this line https://github.com/devsnd/tinytag/blob/9c7bd666f753d0eb6eb8573c5574510ed366641e/tinytag/tinytag.py#L802
+        # for this to work, we need this line:
+        # https://github.com/devsnd/tinytag/blob/9c7bd666f753d0eb6eb8573c5574510ed366641e/tinytag/tinytag.py#L802
         # to be set to "sr" (and not to a costant)
         # file_metadata = TinyTag.get(self.file_path)
         # self.hertz_rate = file_metadata.samplerate
@@ -165,9 +200,50 @@ class VoiceMessage:
                         self.hertz_rate = sample_rate  # internally opus always uses 48khz
                         break  # read the header just as much as we need
 
-    def recognize(self, max_alternatives: [int, None] = None, *args, **kwargs) -> [List[SpeechRecognitionAlternative], None]:
+    def _parse_sample_rate_but_cooler(self):
+        with io.open(self.file_path, "rb") as fh:
+            header_data = fh.read(27)
+            header = struct.unpack('<4sBBqIIiB', header_data)
+            # https://xiph.org/ogg/doc/framing.html
+            oggs, version, flags, pos, serial, pageseq, crc, segments = header
+            # print(oggs, version, flags, pos, serial, pageseq, crc, segments)
+            # self._max_samplenum = max(self._max_samplenum, pos)
+
+            if oggs != b'OggS' or version != 0:
+                raise ValueError('not a valid ogg file')
+
+            segsizes = struct.unpack('B' * segments, fh.read(segments))
+            total = 0
+
+            first_page = b""
+
+            for segsize in segsizes:  # read all segments
+                total += segsize
+                if total < 255:  # less than 255 bytes means end of page
+                    first_page = fh.read(total)
+                    break
+
+            packet = first_page
+
+            walker = io.BytesIO(packet)
+
+            if packet[0:8] != b"OpusHead":
+                raise ValueError("packet must be OpusHead")
+
+            # https://www.videolan.org/developers/vlc/modules/codec/opus_header.c
+            # https://mf4.xiph.org/jenkins/view/opus/job/opusfile-unix/ws/doc/html/structOpusHead.html
+            walker.seek(8, os.SEEK_CUR)  # jump over header name
+            (version, ch, _, sample_rate, _, _) = struct.unpack("<BBHIHB", walker.read(11))
+
+            if (version & 0xF0) != 0:
+                raise ValueError("only major version 0 supported")
+
+            self.channels = ch
+            self.hertz_rate = sample_rate  # internally opus always uses 48khz
+
+    def recognize(self, max_alternatives: [int, None] = None, punctuation: bool = True, *args, **kwargs) -> Tuple[Union[str, None], Union[float, None]]:
         self._generate_recognition_audio()
-        self._parse_sample_rate()
+        self._parse_sample_rate_but_cooler()
         logger.debug("file sample rate (hertz rate): %d", self.hertz_rate)
 
         # noinspection PyTypeChecker
@@ -175,33 +251,17 @@ class VoiceMessage:
             encoding=RecognitionConfig.AudioEncoding.OGG_OPUS,
             sample_rate_hertz=self.hertz_rate,
             language_code=self.LANGUAGE,
-            enable_automatic_punctuation=True,
-            max_alternatives=max_alternatives,
+            enable_automatic_punctuation=punctuation,
+            # max_alternatives=max_alternatives,
             profanity_filter=False
         )
 
         if not self.short:
             logger.debug("using long running operation")
-            response: RecognizeResponse = self._recognize_long(*args, **kwargs)
+            return self._recognize_long(*args, **kwargs)
         else:
             logger.debug("using standard operation")
-            response: RecognizeResponse = self._recognize_short(*args, **kwargs)
-
-        if not response:
-            logger.warning("no response")
-            return
-        else:
-            logger.debug("response received")
-
-        transcriptions = list()
-
-        result: SpeechRecognitionResult
-        for result in response.results:
-            alternative: SpeechRecognitionAlternative
-            for j, alternative in enumerate(result.alternatives):
-                transcriptions.append(alternative)
-
-        return transcriptions
+            return self._recognize_short(*args, **kwargs)
 
     def cleanup(self):
         try:
@@ -240,7 +300,7 @@ class VoiceMessageRemote(VoiceMessage):
 
         blob.delete()
 
-    def recognize(self, *args, **kwargs) -> List[SpeechRecognitionAlternative]:
+    def recognize(self, *args, **kwargs):
         # all the network stuff goes here, not in __init__
         self.bucket = self.storage_client.get_bucket(self.bucket_name)
         self._upload_blob()

@@ -44,17 +44,16 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
 
     message_to_edit = update.message.reply_html(text, disable_notification=True, quote=True)
 
-    result: List[SpeechRecognitionAlternative] = voice.recognize()
+    raw_transcript, confidence = voice.recognize(punctuation=False)
 
-    if not result:
+    if not raw_transcript:
         logger.warning("request for voice message \"%s\" returned empty response (file not deleted)", voice.file_path)
         # do not cleanup the file
         return message_to_edit, None
 
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
 
-    alternative = result[0]
-    transcription = f"\"<i>{alternative.transcript}</i>\" <b>[{round(alternative.confidence, 2)}]</b>"
+    transcription = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {voice.hertz_rate_str}]</b>"
 
     if config.misc.remove_downloaded_files:
         voice.cleanup()
@@ -104,7 +103,7 @@ def on_voice_message_private_chat_forwarded(update: Update, _, session: Session,
                 )
                 return
 
-    voice = VoiceMessageLocal.from_message(update.message, download=True)
+    voice = VoiceMessageLocal.from_message(update.message)
 
     message_to_edit, transcription = recognize_voice(voice, update)
 
@@ -158,6 +157,14 @@ def on_voice_message_group_chat(update: Update, _, session: Session, user: User,
         )
 
 
-stickersbot.add_handler(MessageHandler(Filters.private & Filters.voice & ~Filters.forwarded, on_voice_message_private_chat))
-stickersbot.add_handler(MessageHandler(Filters.private & Filters.voice & Filters.forwarded, on_voice_message_private_chat_forwarded))
-stickersbot.add_handler(MessageHandler(Filters.group & Filters.voice, on_voice_message_group_chat))
+stickersbot.add_handler(MessageHandler(
+    Filters.private & Filters.voice & ~Filters.forwarded,
+    on_voice_message_private_chat,
+    run_async=True
+))
+stickersbot.add_handler(MessageHandler(
+    Filters.private & Filters.voice & Filters.forwarded,
+    on_voice_message_private_chat_forwarded,
+    run_async=True
+))
+stickersbot.add_handler(MessageHandler(Filters.group & Filters.voice, on_voice_message_group_chat, run_async=True))
