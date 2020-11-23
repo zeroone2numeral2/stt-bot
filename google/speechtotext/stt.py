@@ -25,7 +25,8 @@ logger = logging.getLogger(__name__)
 
 class VoiceMessage:
     LANGUAGE = "it-IT"
-    OPUS_HERTZ_RATE = 48000
+    OPUS_HERTZ_RATE_LONG = 48000
+    OPUS_HERTZ_RATE_SHORT = 16000
 
     def __init__(self, file_name, duration: int, download_dir='downloads', max_alternatives: [int, None] = None):
         if duration is None:
@@ -37,6 +38,7 @@ class VoiceMessage:
         self.file_path = os.path.join(download_dir, self.file_name)
         self.duration = duration
         self.short = True
+        self.hertz_rate = self.OPUS_HERTZ_RATE_SHORT
         self.client: SpeechClient = speech_client
         self.max_alternatives = max_alternatives
         self.recognition_audio: [RecognitionAudio, None] = None
@@ -44,6 +46,10 @@ class VoiceMessage:
 
         if self.duration > 59:
             self.short = False
+            # hertz rate for opus-encoded files should always be 48.000 (ffmpeg -i filename.ogg), but for
+            # some reason google's api, with short operations, only works when you
+            # pass 16.000 as value (or 24.000 but it doesn't work good)
+            self.hertz_rate = self.OPUS_HERTZ_RATE_LONG
 
     @classmethod
     def from_message(cls, message: Message, download=False, *args, **kwargs):
@@ -89,16 +95,16 @@ class VoiceMessage:
 
         return response
 
-    def recognize(self, *args, **kwargs) -> List[SpeechRecognitionAlternative]:
+    def recognize(self, max_alternatives: [int, None] = None, *args, **kwargs) -> [List[SpeechRecognitionAlternative], None]:
         self._generate_recognition_audio()
 
         # noinspection PyTypeChecker
         self.recognition_config = RecognitionConfig(
             encoding=RecognitionConfig.AudioEncoding.OGG_OPUS,
-            sample_rate_hertz=self.OPUS_HERTZ_RATE,
+            sample_rate_hertz=self.hertz_rate,
             language_code=self.LANGUAGE,
             enable_automatic_punctuation=True,
-            # max_alternatives=1,
+            max_alternatives=max_alternatives,
             profanity_filter=False
         )
 

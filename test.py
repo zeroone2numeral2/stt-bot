@@ -82,33 +82,50 @@ def main_long(file_name, use_bucket=False):
         delete_blob(bucketname, gcs_file_name)
 
 
-def main(file_name):
+def main(file_name, use_bucket=False):
 
     client = SpeechClient.from_service_account_json('./speech-recognition-bot-2e6b405bf854.json')
+
+    if use_bucket:
+        gcs_file_name = 'current_voice.ogg'
+        upload_blob(bucketname, file_name, gcs_file_name)
+        gcs_uri = 'gs://' + bucketname + '/' + gcs_file_name
+
+        audio = RecognitionAudio(uri=gcs_uri)
+    else:
+        with io.open(file_name, "rb") as audio_file:
+            content = audio_file.read()
+            audio = RecognitionAudio(content=content)
 
     with io.open(file_name, "rb") as audio_file:
         content = audio_file.read()
         audio = RecognitionAudio(content=content)
 
-    config = RecognitionConfig(
-        encoding=RecognitionConfig.AudioEncoding.OGG_OPUS,
-        sample_rate_hertz=48000,
-        language_code="it-IT",
-        enable_automatic_punctuation=True,
-        # max_alternatives=1,
-        profanity_filter=False
-    )
+    SAMPLE_RATE_HERTZ = [8000, 12000, 16000, 24000, 48000]
 
-    response: RecognizeResponse = client.recognize(config=config, audio=audio, timeout=300)
-    print(response)
 
-    result: SpeechRecognitionResult
-    for i, result in enumerate(response.results):
-        print("result " + str(i + 1))
-        alternative: SpeechRecognitionAlternative
-        for j, alternative in enumerate(result.alternatives):
-            print('', "alternative {}".format(j + 1))
-            print('', '', "transcript [{}]: {}".format(round(alternative.confidence, 2), alternative.transcript))
+    for hertz in SAMPLE_RATE_HERTZ:
+        print("-" * 100)
+        print(hertz)
+        config = RecognitionConfig(
+            encoding=RecognitionConfig.AudioEncoding.OGG_OPUS,
+            sample_rate_hertz=hertz,
+            language_code="it-IT",
+            enable_automatic_punctuation=True,
+            # max_alternatives=1,
+            profanity_filter=False
+        )
+
+        response: RecognizeResponse = client.recognize(config=config, audio=audio, timeout=300)
+        print(response)
+
+        result: SpeechRecognitionResult
+        for i, result in enumerate(response.results):
+            print("result " + str(i + 1))
+            alternative: SpeechRecognitionAlternative
+            for j, alternative in enumerate(result.alternatives):
+                print('', "alternative {}".format(j + 1))
+                print('', '', "transcript [{}]: {}".format(round(alternative.confidence, 2), alternative.transcript))
 
 
 def main_streaming(file_name):
@@ -155,4 +172,4 @@ def main_streaming(file_name):
 
 
 if __name__ == '__main__':
-    main_long('downloads/gianni_107.ogg')
+    main('downloads/23646077_12530.ogg')

@@ -26,8 +26,8 @@ class DummyContext:
 class VoiceMessagesBot(Updater):
     COMMANDS_LIST = [
         BotCommand("start", "messaggio di benvenuto"),
-        BotCommand("help", "lista dei comandi"),
-        BotCommand("tos", "concedi/revoca consenso all'utilizzo dei dati"),
+        # BotCommand("help", "lista dei comandi"),
+        BotCommand("tos", "concedi/revoca consenso al trattamento dei tuoi dati"),
     ]
 
     @staticmethod

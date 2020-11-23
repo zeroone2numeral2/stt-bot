@@ -1,6 +1,7 @@
 import logging
-from typing import List
+from typing import List, Tuple, Union
 
+from sqlalchemy.orm import Session
 from google.cloud.speech import (
     SpeechClient,
     RecognitionConfig,
@@ -18,21 +19,46 @@ from telegram.ext import (
 # noinspection PyPackageRequirements
 from telegram import (
     ChatAction,
-    Update, ParseMode
+    Update, ParseMode, Message
 )
 
 from bot import stickersbot
 from bot.decorators import decorators
+from bot.database.models.user import User
 from google.speechtotext import VoiceMessageLocal
 from google.speechtotext import VoiceMessageRemote
 from config import config
 
 logger = logging.getLogger(__name__)
 
-TEXT = """Ciao! Sono un bot che permette di trascrivere i messaggi vocali inviati dagli utenti di in gruppo, \
-utilizzando la <a href="https://cloud.google.com/speech-to-text/">trascrizione vocale di Google</a>
+TEXT_HIDDEN_SENDER = """Mi dispiace, il mittente di questo messaggio vocale ha reso il proprio account non \
+accessibile tramite i messaggi inoltrati, quindi non posso verificare che abbia accettato i termini di servizio"""
 
-Usa /help per visualizzare tutti i comandi"""
+
+def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Update) -> Tuple[Message, Union[str, None]]:
+    if voice.short:
+        text = "<i>Inizio trascrizione...</i>"
+    else:
+        text = "<i>Inizio trascrizione... Per i vocali > 1 minuto potrebbe volerci un po' di più</i>"
+
+    message_to_edit = update.message.reply_html(text, disable_notification=True, quote=True)
+
+    result: List[SpeechRecognitionAlternative] = voice.recognize()
+
+    if not result:
+        logger.warning("request for voice message \"%s\" returned empty response (file not deleted)", voice.file_path)
+        # do not cleanup the file
+        return message_to_edit, None
+
+    # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
+
+    alternative = result[0]
+    transcription = f"<i>{alternative.transcript}</i> <b>[{round(alternative.confidence, 2)}]</b>"
+
+    if config.misc.remove_downloaded_files:
+        voice.cleanup()
+
+    return message_to_edit, transcription
 
 
 @decorators.action(ChatAction.TYPING)
@@ -40,44 +66,94 @@ Usa /help per visualizzare tutti i comandi"""
 @decorators.pass_session(pass_user=True)
 @decorators.ensure_tos(send_accept_message=True)
 def on_voice_message_private_chat(update: Update, *args, **kwargs):
-    logger.info('voice message in a private chat')
+    logger.info("voice message in a private chat")
 
-    if config.google.bucket_name:
-        logger.info('using remote storage')
-        voice = VoiceMessageRemote.from_message(update.message, bucket_name=config.google.bucket_name, download=True)
+    voice = VoiceMessageLocal.from_message(update.message, download=True)
+
+    message_to_edit, transcription = recognize_voice(voice, update)
+
+    if not transcription:
+        message_to_edit.edit_text("<i>Impossibile trascrivere messaggio vocale</i>", parse_mode=ParseMode.HTML)
     else:
-        logger.info('using local storage')
-        voice = VoiceMessageLocal.from_message(update.message, download=True)
+        message_to_edit.edit_text(
+            transcription,
+            disable_web_page_preview=True,
+            parse_mode=ParseMode.HTML
+        )
 
-    if voice.short:
-        text = "<i>Inizio trascrizione...</i>"
+
+@decorators.action(ChatAction.TYPING)
+@decorators.failwithmessage
+@decorators.pass_session(pass_user=True)
+def on_voice_message_private_chat_forwarded(update: Update, _, session: Session, user: User):
+    logger.info("forwarded voice message in a private chat")
+
+    if not update.message.forward_from and update.message.forward_sender_name:
+        logger.info("forwarded message: original sender hidden their account")
+        update.message.reply_html(TEXT_HIDDEN_SENDER)
+        return
     else:
-        text = "<i>Inizio trascrizione... Per i vocali > 1 minuto potrebbe volerci un po' di più</i>"
+        user: [User, None] = session.query(User).filter(User.user_id == update.message.forward_from.id).one_or_none()
+        if not user or not user.tos_accepted:
+            logger.info("forwarded message: no user in db, or user did not accept tos")
+            update.message.reply_html("<i>Mi dispiace, il mittente di questo messaggio non ha acconsentito al trattamento dei suoi dati</i>", quote=True)
+            return
 
-    message_to_edit = update.message.reply_html(text)
 
-    result: List[SpeechRecognitionAlternative] = voice.recognize()
+    voice = VoiceMessageLocal.from_message(update.message, download=True)
 
-    if not result:
-        # message_to_edit.delete()
-        message_to_edit.edit_text('<i>Impossibile trascrivere messaggio vocale</i>', parse_mode=ParseMode.HTML)
-        logger.warning('request for voice message %s returned empty response', voice.file_path)
-        # do not cleanup the file
+    message_to_edit, transcription = recognize_voice(voice, update)
+
+    if not transcription:
+        message_to_edit.edit_text("<i>Impossibile trascrivere messaggio vocale</i>", parse_mode=ParseMode.HTML)
+    else:
+        message_to_edit.edit_text(
+            transcription,
+            disable_web_page_preview=True,
+            parse_mode=ParseMode.HTML
+        )
+
+
+@decorators.action(ChatAction.TYPING)
+@decorators.failwithmessage
+@decorators.pass_session(pass_user=True)
+def on_voice_message_group_chat(update: Update, _, session: Session, user: User, *args, **kwargs):
+    logger.info("voice message in a group chat")
+
+    # ignore:
+    # - forwarded voice messages from users who did not accept the ToS
+    # - forwarded voice messages from user who hid their accounts
+    # - voice messages from members that did not accept the ToS
+
+    if update.message.forward_from or update.message.forward_sender_name:
+        # the message is a forwarded message
+        if not update.message.forward_from and update.message.forward_sender_name:
+            logger.info("forwarded message: original sender hidden their account")
+            return
+
+        user: [User, None] = session.query(User).filter(User.user_id == update.message.forward_from.id).one_or_none()
+        if not user or not user.tos_accepted:
+            logger.info("forwarded message: no user in db, or user did not accept tos")
+            return
+
+    if not user.tos_accepted:
+        logger.info("user did not accept tos")
         return
 
-    alternative = result[0]
-    transcription = '<i>{}</i> [{}]'.format(alternative.confidence, alternative.confidence)
+    voice = VoiceMessageLocal.from_message(update.message, download=True)
 
-    message_to_edit.edit_text(
-        transcription,
-        disable_web_page_preview=True,
-        parse_mode=ParseMode.HTML,
-        disable_notification=True,
-        quote=True
-    )
+    message_to_edit, transcription = recognize_voice(voice, update)
 
-    if config.misc.remove_downloaded_files:
-        voice.cleanup()
+    if not transcription:
+        message_to_edit.delete()
+    else:
+        message_to_edit.edit_text(
+            transcription,
+            disable_web_page_preview=True,
+            parse_mode=ParseMode.HTML
+        )
 
 
 stickersbot.add_handler(MessageHandler(Filters.private & Filters.voice & ~Filters.forwarded, on_voice_message_private_chat))
+stickersbot.add_handler(MessageHandler(Filters.private & Filters.voice & Filters.forwarded, on_voice_message_private_chat_forwarded))
+stickersbot.add_handler(MessageHandler(Filters.group & Filters.voice, on_voice_message_group_chat))

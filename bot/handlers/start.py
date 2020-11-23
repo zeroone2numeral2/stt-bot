@@ -21,9 +21,7 @@ from config import config
 logger = logging.getLogger(__name__)
 
 TEXT = """Ciao! Sono un bot che permette di trascrivere i messaggi vocali inviati dagli utenti di in gruppo, \
-utilizzando la <a href="https://cloud.google.com/speech-to-text/">trascrizione vocale di Google</a>
-
-Usa /help per visualizzare tutti i comandi"""
+utilizzando la <a href="https://cloud.google.com/speech-to-text/">trascrizione vocale di Google</a>"""
 
 
 @decorators.action(ChatAction.TYPING)

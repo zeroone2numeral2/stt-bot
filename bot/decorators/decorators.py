@@ -3,12 +3,13 @@ from functools import wraps
 
 from sqlalchemy.orm import Session
 # noinspection PyPackageRequirements
-from telegram import Update
+from telegram import Update, ParseMode
 # noinspection PyPackageRequirements
 from telegram.error import TimedOut
 # noinspection PyPackageRequirements
 from telegram.ext import CallbackContext
 
+from bot.markups import InlineKeyboard
 from bot.database.base import get_session
 from bot.database.models.user import User
 from bot.utilities import utilities
@@ -54,7 +55,13 @@ def ensure_tos(send_accept_message=False, send_accept_message_after_callback=Fal
                 if send_accept_message_after_callback:
                     callback_result = func(update, context, session, user, *args, **kwargs)
 
-                update.message.reply_html('pls accept tos')
+                update.message.reply_html(
+                    "Affinchè il bot possa trascrivere i tuoi messaggi vocali qui e nei gruppi, è necessario che tu "
+                    "legga l'informativa sul trattamento dei dati personali",
+                    reply_markup=InlineKeyboard.TOS_SHOW,
+                    disable_web_page_preview=True,
+                    parse_mode=ParseMode.HTML
+                )
 
                 return callback_result
             else:
