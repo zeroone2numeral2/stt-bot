@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Tuple, Union
 
@@ -32,6 +33,8 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
 
     message_to_edit = update.message.reply_html(text, disable_notification=True, quote=True)
 
+    start = datetime.datetime.now()
+
     try:
         raw_transcript, confidence = voice.recognize(punctuation=config.google.punctuation)
     except UnsupportedFormat:
@@ -47,6 +50,9 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
 
         return message_to_edit, None
 
+    end = datetime.datetime.now()
+    elapsed = (end - start).total_seconds()
+
     if not raw_transcript:
         logger.warning("request for voice message \"%s\" returned empty response (file not deleted)", voice.file_path)
         if not config.misc.keep_files_on_error:
@@ -56,7 +62,7 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
 
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
 
-    transcription = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {voice.sample_rate_str}]</b>"
+    transcription = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {voice.sample_rate_str} {elapsed}s]</b>"
 
     if config.misc.remove_downloaded_files:
         voice.cleanup()
