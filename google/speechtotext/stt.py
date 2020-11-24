@@ -206,10 +206,8 @@ class VoiceMessage:
         )
 
         if not self.short:
-            logger.debug("using long running operation")
             return self._recognize_long(*args, **kwargs)
         else:
-            logger.debug("using standard operation")
             return self._recognize_short(*args, **kwargs)
 
     def cleanup(self):
