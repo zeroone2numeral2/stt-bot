@@ -28,19 +28,23 @@ il propro servizio. I messaggi vocali degli utenti che non hanno acconsentito al
 
 <b>Dati identificativi dell'utente Telegram</b>
 Il bot salva l'ID univoco degli utenti telegram che lo avviano, o che incontra nelle chat di gruppo, al \
-fine di verificare la presa visione/accettazione di questo disclaimer
+fine di verificare la presa visione/accettazione di questo disclaimer e di salvare alcune impostazioni \
+associate all'utente (ad esempio: whitelist di utenti che possono aggiungere il bot ai gruppi).
 
 <b>Memorizzazione dei file audio salvati per la trascrizione</b>
 Il bot scarica da Telegram i messaggi vocali che riceve solo nel caso in cui il mittente originale del messaggio \
 abbia acconsentito al trattamento dei propri dati. I file audio vengono rimossi non \
-appena il processo di trascrizione è terminato
+appena il processo di trascrizione è terminato. <b>Non</b> vengono rimossi i file audio che generano un errore.
 
 <b>Condivizione dei file audio da trascrivere con Google</b> 
 Questo bot utilizza <a href="https://cloud.google.com/speech-to-text/">l'API di Google per la trascrizione vocale</a>. \
 Tutti i messaggi vocali trascritti da questo bot vengono inviati in forma anonima ai servizi di Google, \
 affinchè possano essere processati e trascritti. Il bot non fornisce a Google nessuna informazione sul mittente \
-originale di un singolo vocale da trascrivere. In ogni caso, sulla carta, Google potrebbe utilizzare \
-dati già in suo possesso per identificare più o meno precisamente le persone fisiche la cui voce compare nel file audio
+originale di un singolo vocale da trascrivere - inoltre, \
+<a href="https://cloud.google.com/speech-to-text/docs/data-logging">in base a quanto scritto nella \
+documentazione</a>, l'API non logga nè gli audio che riceve nè le trascrizioni che genera. Tuttavia, \
+nel caso in cui ciò non fosse vero vero, sulla carta Google potrebbe utilizzare dati già in suo possesso per \
+identificare più o meno precisamente le persone fisiche la cui voce compare nei file audio.
 
 Utilizzando il tasto "accetta" qui sotto si conferma di aver letto e compreso questo disclaimer, e si acconsente alla \
 manipolazione dei dati così come descritto. Sarà possibile revocare il proprio consenso utilizzando il comando /tos"""
