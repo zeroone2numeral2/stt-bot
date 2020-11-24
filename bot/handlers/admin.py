@@ -236,9 +236,6 @@ def on_sr_command(update: Update, context: CallbackContext):
 
     raw_transcript, confidence = voice.recognize(punctuation=config.google.punctuation)
 
-    if raw_transcript:
-        voice.cleanup()
-
     transcription = f"{raw_transcript} <b>[{confidence} a:{voice.sample_rate_str}/f:{voice.forced_sample_rate}]</b>"
 
     message_to_edit.edit_text(

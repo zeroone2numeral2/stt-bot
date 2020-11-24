@@ -14,7 +14,8 @@ service_account_json = ""
 punctuation = false # transcribe with punctuation
 
 [misc]
-remove_downloaded_files = true # file that receive an empty response are always kept
+remove_downloaded_files = true
+keep_files_on_error = true # do not delete file that generate an exception/receive an empty response
 
 [database]
 engine_string = "sqlite:///bot.db"

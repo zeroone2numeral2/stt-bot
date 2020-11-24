@@ -36,9 +36,15 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
         raw_transcript, confidence = voice.recognize(punctuation=config.google.punctuation)
     except UnsupportedFormat:
         logger.error("unsupported format while transcribing voice %s", voice.file_path)
+        if not config.misc.keep_files_on_error:
+            voice.cleanup()
+
         return message_to_edit, None
     except Exception as e:
         logger.error("unknown exception while transcribing voice %s: ", voice.file_path, str(e))
+        if not config.misc.keep_files_on_error:
+            voice.cleanup()
+
         return message_to_edit, None
 
     if not raw_transcript:
