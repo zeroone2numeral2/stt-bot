@@ -149,58 +149,7 @@ class VoiceMessage:
         # self.hertz_rate = file_metadata.samplerate
         raise NotImplementedError
 
-    @staticmethod
-    def _parse_pages(fh):
-        # for the spec, see: https://wiki.xiph.org/Ogg
-        previous_page = b''  # contains data from previous (continuing) pages
-        header_data = fh.read(27)  # read ogg page header
-        while len(header_data) != 0:
-            header = struct.unpack('<4sBBqIIiB', header_data)
-            # https://xiph.org/ogg/doc/framing.html
-            oggs, version, flags, pos, serial, pageseq, crc, segments = header
-            # print(oggs, version, flags, pos, serial, pageseq, crc, segments)
-            # self._max_samplenum = max(self._max_samplenum, pos)
-
-            if oggs != b'OggS' or version != 0:
-                raise ValueError('not a valid ogg file')
-
-            segsizes = struct.unpack('B' * segments, fh.read(segments))
-            total = 0
-
-            for segsize in segsizes:  # read all segments
-                total += segsize
-                if total < 255:  # less than 255 bytes means end of page
-                    yield previous_page + fh.read(total)
-                    previous_page = b''
-                    total = 0
-
-            if total != 0:
-                if total % 255 == 0:
-                    previous_page += fh.read(total)
-                else:
-                    yield previous_page + fh.read(total)
-                    previous_page = b''
-
     def _parse_sample_rate(self):
-        # all opus decoders will return 48kHz when decoding opus files, even if the header contains a diiferent value
-        # google wants the header value to be passed, or the request will fail
-        # see https://stackoverflow.com/q/39186282
-        # courtesy of TinyTag: https://github.com/devsnd/tinytag
-
-        with io.open(self.file_path, "rb") as fh:
-            for packet in self._parse_pages(fh):
-                walker = io.BytesIO(packet)
-                if packet[0:8] == b'OpusHead':  # parse opus header (MUST be opus header)
-                    # https://www.videolan.org/developers/vlc/modules/codec/opus_header.c
-                    # https://mf4.xiph.org/jenkins/view/opus/job/opusfile-unix/ws/doc/html/structOpusHead.html
-                    walker.seek(8, os.SEEK_CUR)  # jump over header name
-                    (version, ch, _, sample_rate, _, _) = struct.unpack("<BBHIHB", walker.read(11))
-                    if (version & 0xF0) == 0:  # only major version 0 supported
-                        self.channels = ch
-                        self.hertz_rate = sample_rate  # internally opus always uses 48khz
-                        break  # read the header just as much as we need
-
-    def _parse_sample_rate_but_cooler(self):
         with io.open(self.file_path, "rb") as fh:
             header_data = fh.read(27)
             header = struct.unpack('<4sBBqIIiB', header_data)
@@ -243,7 +192,7 @@ class VoiceMessage:
 
     def recognize(self, max_alternatives: [int, None] = None, punctuation: bool = True, *args, **kwargs) -> Tuple[Union[str, None], Union[float, None]]:
         self._generate_recognition_audio()
-        self._parse_sample_rate_but_cooler()
+        self._parse_sample_rate()
         logger.debug("file sample rate (hertz rate): %d", self.hertz_rate)
 
         # noinspection PyTypeChecker
