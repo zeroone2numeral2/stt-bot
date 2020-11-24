@@ -51,7 +51,7 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
         return message_to_edit, None
 
     end = datetime.datetime.now()
-    elapsed = (end - start).total_seconds()
+    elapsed = round((end - start).total_seconds(), 1)
 
     if not raw_transcript:
         logger.warning("request for voice message \"%s\" returned empty response (file not deleted)", voice.file_path)
