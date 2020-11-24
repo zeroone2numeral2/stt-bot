@@ -24,9 +24,6 @@ TEXT_HIDDEN_SENDER = """Mi dispiace, il mittente di questo messaggio vocale ha r
 accessibile tramite i messaggi inoltrati, quindi non posso verificare che abbia accettato i termini di servizio"""
 
 
-
-
-
 def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Update) -> Tuple[Message, Union[str, None]]:
     if voice.short:
         text = "<i>Inizio trascrizione...</i>"
@@ -51,7 +48,7 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
 
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
 
-    transcription = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {voice.hertz_rate_str}]</b>"
+    transcription = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {voice.sample_rate_str}]</b>"
 
     if config.misc.remove_downloaded_files:
         voice.cleanup()

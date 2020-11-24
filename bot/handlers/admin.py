@@ -4,12 +4,13 @@ import os
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect
 # noinspection PyPackageRequirements
-from telegram.ext import MessageHandler, Filters, CommandHandler
+from telegram.ext import MessageHandler, Filters, CommandHandler, CallbackContext
 # noinspection PyPackageRequirements
-from telegram import ChatAction, Update, User as TelegramUser, Message
+from telegram import ChatAction, Update, User as TelegramUser, Message, ParseMode
 
 from bot import sttbot
 from bot.custom_filters import CFilters
+from google.speechtotext import VoiceMessageLocal
 from bot.database.models.chat import Chat
 from bot.database.models.user import User
 from bot.decorators import decorators
@@ -150,8 +151,39 @@ def on_cleandl_command(update: Update, _):
     update.message.reply_html(f"Deleted {deleted_count} files")
 
 
+@decorators.action(ChatAction.TYPING)
+@decorators.failwithmessage
+def on_sr_command(update: Update, context: CallbackContext):
+    logger.info("/sr command, args: %s", context.args)
+
+    if not context.args:
+        update.message.reply_html("Specifica un sample rate (in hertz)", quote=True)
+        return
+
+    if not update.message.reply_to_message.voice:
+        update.message.reply_html("Rispondi ad un messaggio vocale", quote=True)
+        return
+
+    sample_rate = int(context.args[0])
+
+    voice = VoiceMessageLocal.from_message(update.message.reply_to_message, force_sample_rate=sample_rate)
+
+    message_to_edit = update.message.reply_to_message.reply_html(f"Inizio la trascrizione (hertz: {sample_rate})...")
+
+    raw_transcript, confidence = voice.recognize(punctuation=config.google.punctuation)
+
+    transcription = f"{raw_transcript} <b>[{confidence} a:{voice.sample_rate_str}/f:{voice.forced_sample_rate}]</b>"
+
+    message_to_edit.edit_text(
+        transcription,
+        disable_web_page_preview=True,
+        parse_mode=ParseMode.HTML
+    )
+
+
 sttbot.add_handler(CommandHandler("ignoretos", on_ignoretos_command, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler("addgroups", on_addgroups_command_group, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler("addgroups", on_addgroups_command_private, filters=Filters.private & CFilters.from_admin))
 sttbot.add_handler(MessageHandler(Filters.private & Filters.forwarded & CFilters.from_admin, on_forwarded_message))
 sttbot.add_handler(CommandHandler("cleandl", on_cleandl_command, filters=Filters.private & CFilters.from_admin))
+sttbot.add_handler(CommandHandler("sr", on_sr_command, filters=Filters.reply & CFilters.from_admin))

@@ -36,7 +36,14 @@ class VoiceMessage:
     # always says the hertz rate is 48000
     OPUS_HERTZ_RATE = [16000, 48000]
 
-    def __init__(self, file_name, duration: int, download_dir='downloads', max_alternatives: [int, None] = None):
+    def __init__(
+            self,
+            file_name: str,
+            duration: int,
+            download_dir='downloads',
+            force_sample_rate: [int, None] = None,
+            max_alternatives: [int, None] = None
+    ):
         if duration is None:
             raise ValueError("the voice message duration must be provided")
         elif max_alternatives is not None:
@@ -46,7 +53,8 @@ class VoiceMessage:
         self.file_path = os.path.join(download_dir, self.file_name)
         self.duration = duration
         self.short = True
-        self.hertz_rate = None  # self.OPUS_HERTZ_RATE[0]
+        self.sample_rate = None  # self.OPUS_HERTZ_RATE[0]
+        self.forced_sample_rate = force_sample_rate
         self.channels = None  # currently not used
         self.client: SpeechClient = speech_client
         self.max_alternatives = max_alternatives
@@ -81,14 +89,14 @@ class VoiceMessage:
         return voice
 
     @property
-    def hertz_rate_str(self):
-        if self.hertz_rate is None:
+    def sample_rate_str(self):
+        if self.sample_rate is None:
             raise ValueError("hertz rate is None")
 
-        if self.hertz_rate % 1000 == 0:
-            return f"{int(self.hertz_rate / 1000)}kHz"
+        if self.sample_rate % 1000 == 0:
+            return f"{int(self.sample_rate / 1000)}kHz"
         else:
-            return f"{self.hertz_rate / 1000}kHz"
+            return f"{self.sample_rate / 1000}kHz"
 
     def _generate_recognition_audio(self):
         raise NotImplementedError("this method must be overridden")
@@ -193,18 +201,18 @@ class VoiceMessage:
                 raise ValueError("only major version 0 supported")
 
             self.channels = ch
-            self.hertz_rate = sample_rate  # internally opus always uses 48khz
+            self.sample_rate = sample_rate  # internally opus always uses 48khz
 
     def recognize(self, max_alternatives: [int, None] = None, punctuation: bool = True, *args, **kwargs) -> Tuple[Union[str, None], Union[float, None]]:
         self._generate_recognition_audio()
 
         self._parse_sample_rate()
-        logger.debug("file sample rate (hertz rate): %d", self.hertz_rate)
+        logger.debug("file sample rate: %d (forced: %s)", self.sample_rate, self.forced_sample_rate)
 
         # noinspection PyTypeChecker
         self.recognition_config = RecognitionConfig(
             encoding=RecognitionConfig.AudioEncoding.OGG_OPUS,
-            sample_rate_hertz=self.hertz_rate,
+            sample_rate_hertz=self.forced_sample_rate if self.forced_sample_rate else self.sample_rate,
             language_code=self.LANGUAGE,
             enable_automatic_punctuation=punctuation,
             # max_alternatives=max_alternatives,
