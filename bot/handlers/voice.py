@@ -68,7 +68,7 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
 def on_voice_message_private_chat(update: Update, *args, **kwargs):
     logger.info("voice message in a private chat")
 
-    voice = VoiceMessageLocal.from_message(update.message, download=True)
+    voice = VoiceMessageLocal.from_message(update.message)
 
     message_to_edit, transcription = recognize_voice(voice, update)
 

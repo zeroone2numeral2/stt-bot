@@ -57,7 +57,7 @@ class VoiceMessage:
             self.short = False
 
     @classmethod
-    def from_message(cls, message: Message, *args, **kwargs):
+    def from_message(cls, message: Message, download=True, *args, **kwargs):
         if not message.voice:
             raise AttributeError("Message object must contain a voice message")
 
@@ -73,8 +73,10 @@ class VoiceMessage:
             **kwargs
         )
 
-        telegram_file = message.voice.get_file()
-        telegram_file.download(voice.file_path)
+        if download:
+            logger.debug("downloading voice message to %s", voice.file_path)
+            telegram_file = message.voice.get_file()
+            telegram_file.download(voice.file_path)
 
         return voice
 
