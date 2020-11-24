@@ -1,4 +1,5 @@
 import logging
+import os
 
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect
@@ -127,7 +128,30 @@ def on_forwarded_message(update: Update, _, session: Session):
     update.message.reply_text("\n".join([f"{k}: {v}" for k, v in columns]))
 
 
+@decorators.action(ChatAction.TYPING)
+@decorators.failwithmessage
+def on_cleandl_command(update: Update, _):
+    logger.info("/cleandl command")
+
+    dir_path = r"downloads/"
+
+    deleted_count = 0
+    for file_name in os.listdir(dir_path):
+        if file_name.startswith("."):
+            continue
+
+        file_path = os.path.join(dir_path, file_name)
+        if os.path.isdir(file_name):
+            continue
+
+        os.remove(file_path)
+        deleted_count += 1
+
+    update.message.reply_html(f"Deleted {deleted_count} files")
+
+
 sttbot.add_handler(CommandHandler("ignoretos", on_ignoretos_command, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler("addgroups", on_addgroups_command_group, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler("addgroups", on_addgroups_command_private, filters=Filters.private & CFilters.from_admin))
-sttbot.add_handler(MessageHandler(Filters.private & CFilters.from_admin, on_forwarded_message))
+sttbot.add_handler(MessageHandler(Filters.private & Filters.forwarded & CFilters.from_admin, on_forwarded_message))
+sttbot.add_handler(CommandHandler("cleandl", on_cleandl_command, filters=Filters.private & CFilters.from_admin))
