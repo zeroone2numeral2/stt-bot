@@ -12,6 +12,7 @@ from telegram.ext import CallbackContext
 from bot.markups import InlineKeyboard
 from bot.database.base import get_session
 from bot.database.models.user import User
+from bot.database.models.chat import Chat
 from bot.utilities import utilities
 from config import config
 
@@ -97,25 +98,38 @@ def failwithmessage(func):
     return wrapped
 
 
-def pass_session(pass_user=True, create_user_if_not_existing=True):
-    if create_user_if_not_existing and not pass_user:
-        raise ValueError("if 'create_user_if_not_existing' is true, 'pass_user' must be true too")
-
+def pass_session(pass_user=False, pass_chat=False, create_if_not_existing=True):
     def real_decorator(func):
         @wraps(func)
         def wrapped(update: Update, context: CallbackContext, *args, **kwargs):
             # we fetch the session once per message at max, cause the decorator is run only if a message passes filters
             session: Session = get_session()
 
-            user: [User, None] = None
+            # user: [User, None] = None
+            # chat: [Chat, None] = None
+
             if pass_user:
                 user = session.query(User).filter(User.user_id == update.effective_user.id).one_or_none()
 
-                if not user and create_user_if_not_existing:
+                if not user and create_if_not_existing:
                     user = User(user_id=update.effective_user.id)
                     session.add(user)
 
-            result = func(update, context, session=session, user=user, *args, **kwargs)
+                kwargs['user'] = user
+
+            if pass_chat:
+                if update.effective_chat.id > 0:
+                    raise ValueError("'pass_chat' cannot be True for handlers that work in private chats")
+
+                chat = session.query(Chat).filter(Chat.chat_id == update.effective_chat.id).one_or_none()
+
+                if not chat and create_if_not_existing:
+                    chat = Chat(chat_id=update.effective_chat.id)
+                    session.add(chat)
+
+                kwargs['chat'] = chat
+
+            result = func(update, context, session=session, *args, **kwargs)
 
             session.commit()
 

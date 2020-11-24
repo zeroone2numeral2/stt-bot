@@ -7,9 +7,10 @@ from pickle import UnpicklingError
 from html import escape
 
 # noinspection PyPackageRequirements
-from telegram import User
+from telegram import User, Message
 from telegram.ext import PicklePersistence
 
+from bot import sttbot
 from config import config
 
 logger = logging.getLogger(__name__)
@@ -50,3 +51,18 @@ def escape_html(*args, **kwargs):
 
 def is_admin(user: User) -> bool:
     return user.id in config.telegram.admins
+
+
+def user_hidden_account(message: Message):
+    return message.forward_sender_name and not message.forward_from
+
+
+def is_forward(message: Message):
+    return message.forward_sender_name or message.forward_from
+
+
+def is_reply_to_bot(message: Message):
+    if not message.reply_to_message:
+        raise ValueError("Message is not a reply to another message")
+
+    return message.reply_to_message.from_user.is_bot

@@ -4,11 +4,13 @@ persistence = "" # keep empty to disable percistency of temporary data (chat_dat
 workers = 4
 admins = [23646077]
 exit_unknown_groups = true
+voice_max_size = 10000000 # 10 mb
 silence_exceptions_private = false
 silence_exceptions_group = false
 
 [google]
 service_account_json = ""
+punctuation = false # transcribe with punctuation
 bucket_name = "" # optional, in case we want to upload voice notes to a remote google storage bucket
 
 [misc]

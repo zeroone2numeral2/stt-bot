@@ -1,0 +1,6 @@
+admin
+newgroup
+tos
+start
+voice
+fallback # catch everything in private chats that is not catched by previews handlers

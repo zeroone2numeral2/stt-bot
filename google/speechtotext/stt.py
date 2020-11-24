@@ -21,10 +21,10 @@ from google.cloud.speech import (
 # from google.longrunning.operations_proto import Operation
 # noinspection PyPackageRequirements
 from telegram import Message
-# from tinytag import TinyTag
 
 from google.clients import speech_client
 from google.clients import storage_client
+from .exceptions import UnsupportedFormat
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,10 @@ class VoiceMessage:
         if self.hertz_rate is None:
             raise ValueError("hertz rate is None")
 
-        return f"{int(self.hertz_rate / 1000)}kHz"
+        if self.hertz_rate % 1000 == 0:
+            return f"{int(self.hertz_rate / 1000)}kHz"
+        else:
+            return f"{self.hertz_rate / 1000}kHz"
 
     def _generate_recognition_audio(self):
         raise NotImplementedError("this method must be overridden")
@@ -161,7 +164,7 @@ class VoiceMessage:
             # self._max_samplenum = max(self._max_samplenum, pos)
 
             if oggs != b'OggS' or version != 0:
-                raise ValueError('not a valid ogg file')
+                raise UnsupportedFormat('not a valid ogg file')
 
             segsizes = struct.unpack('B' * segments, fh.read(segments))
             total = 0
@@ -194,6 +197,7 @@ class VoiceMessage:
 
     def recognize(self, max_alternatives: [int, None] = None, punctuation: bool = True, *args, **kwargs) -> Tuple[Union[str, None], Union[float, None]]:
         self._generate_recognition_audio()
+
         self._parse_sample_rate()
         logger.debug("file sample rate (hertz rate): %d", self.hertz_rate)
 
