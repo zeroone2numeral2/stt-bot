@@ -3,6 +3,5 @@ sqlalchemy
 google-cloud-speech
 google-cloud-storage
 python-telegram-bot==13.0
-pydub
-tinytag
+tinytag==1.5.0
 alembic
