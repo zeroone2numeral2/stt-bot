@@ -49,7 +49,9 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
 
     if not raw_transcript:
         logger.warning("request for voice message \"%s\" returned empty response (file not deleted)", voice.file_path)
-        # do not cleanup the file
+        if not config.misc.keep_files_on_error:
+            voice.cleanup()
+
         return message_to_edit, None
 
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
