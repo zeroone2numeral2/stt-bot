@@ -1,12 +1,14 @@
 import logging
 
 from sqlalchemy.orm import Session
+from sqlalchemy import inspect
 # noinspection PyPackageRequirements
-from telegram.ext import MessageHandler, Filters, MessageFilter, CommandHandler
+from telegram.ext import MessageHandler, Filters, CommandHandler
 # noinspection PyPackageRequirements
 from telegram import ChatAction, Update, User as TelegramUser, Message
 
 from bot import sttbot
+from bot.custom_filters import CFilters
 from bot.database.models.chat import Chat
 from bot.database.models.user import User
 from bot.decorators import decorators
@@ -14,14 +16,6 @@ from bot.utilities import utilities
 from config import config
 
 logger = logging.getLogger(__name__)
-
-
-class FromAdmin(MessageFilter):
-    def filter(self, message):
-        return utilities.is_admin(message.from_user)
-
-
-from_admin = FromAdmin()
 
 
 @decorators.action(ChatAction.TYPING)
@@ -67,6 +61,10 @@ def on_addgroups_command_group(update: Update, _, session: Session):
         update.message.reply_text("Rispondi ad un utente")
         return
 
+    if update.message.reply_to_message.from_user.id == update.message.from_user.id:
+        update.message.reply_text("Gli amministratori del bot possono sempre aggiungerlo a gruppi")
+        return
+
     answer = edit_add_group(session, update.message.reply_to_message.from_user)
 
     update.message.reply_html(answer)
@@ -88,11 +86,48 @@ def on_addgroups_command_private(update: Update, _, session: Session):
         update.message.reply_text("Il mittente ha nascosto il proprio account")
         return
 
+    if replied_to_message.forward_from.id == update.message.from_user.id:
+        update.message.reply_text("Gli amministratori del bot possono sempre aggiungerlo a gruppi")
+        return
+
     answer = edit_add_group(session, replied_to_message.forward_from)
 
     update.message.reply_html(answer, quote=True)
 
 
-sttbot.add_handler(CommandHandler("ignoretos", on_ignoretos_command, filters=Filters.group & from_admin))
-sttbot.add_handler(CommandHandler("addgroups", on_addgroups_command_group, filters=Filters.group & from_admin))
-sttbot.add_handler(CommandHandler("addgroups", on_addgroups_command_private, filters=Filters.private & from_admin))
+@decorators.action(ChatAction.TYPING)
+@decorators.failwithmessage
+@decorators.pass_session()
+def on_forwarded_message(update: Update, _, session: Session):
+    logger.info("forwarded message from admin")
+
+    if not utilities.is_forward_from_user(update.message, exclude_bots=True):
+        update.message.reply_text("Inoltrami un messaggio il cui mittente originale è un utente")
+        return
+
+    if utilities.user_hidden_account(update.message):
+        update.message.reply_text("Il mittente ha nascosto il proprio account")
+        return
+
+    tg_user = update.message.forward_from
+    user_first_name = utilities.escape_html(tg_user.first_name)
+    user = session.query(User).filter(User.user_id == tg_user.id).one_or_none()
+
+    if not user:
+        update.message.reply_html(f"{user_first_name} non è nel database")
+        return
+
+    columns = []
+    model_inspection = inspect(user)
+    for column_attr in model_inspection.mapper.column_attrs:
+        key = column_attr.key
+        value = getattr(user, key)
+        columns.append((key, value))
+
+    update.message.reply_text("\n".join([f"{k}: {v}" for k, v in columns]))
+
+
+sttbot.add_handler(CommandHandler("ignoretos", on_ignoretos_command, filters=Filters.group & CFilters.from_admin))
+sttbot.add_handler(CommandHandler("addgroups", on_addgroups_command_group, filters=Filters.group & CFilters.from_admin))
+sttbot.add_handler(CommandHandler("addgroups", on_addgroups_command_private, filters=Filters.private & CFilters.from_admin))
+sttbot.add_handler(MessageHandler(Filters.private & CFilters.from_admin, on_forwarded_message))

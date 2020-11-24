@@ -1,13 +1,14 @@
 import logging
-from typing import List, Tuple, Union
+from typing import Tuple, Union
 
 from sqlalchemy.orm import Session
 # noinspection PyPackageRequirements
-from telegram.ext import Filters, MessageHandler, MessageFilter
+from telegram.ext import Filters, MessageHandler
 # noinspection PyPackageRequirements
 from telegram import ChatAction, Update, ParseMode, Message
 
 from bot import sttbot
+from bot.custom_filters import CFilters
 from bot.database.models.chat import Chat
 from bot.decorators import decorators
 from bot.database.models.user import User
@@ -23,12 +24,7 @@ TEXT_HIDDEN_SENDER = """Mi dispiace, il mittente di questo messaggio vocale ha r
 accessibile tramite i messaggi inoltrati, quindi non posso verificare che abbia accettato i termini di servizio"""
 
 
-class VoiceTooLarge(MessageFilter):
-    def filter(self, message):
-        return message.voice.file_size and message.voice.file_size > config.telegram.voice_max_size
 
-
-voice_too_large = VoiceTooLarge()
 
 
 def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Update) -> Tuple[Message, Union[str, None]]:
@@ -180,7 +176,7 @@ def on_voice_message_group_chat(update: Update, _, session: Session, user: User,
 
 
 sttbot.add_handler(MessageHandler(
-    Filters.private & Filters.voice & voice_too_large,
+    Filters.private & Filters.voice & CFilters.voice_too_large,
     on_large_voice_message_private_chat
 ))
 sttbot.add_handler(MessageHandler(

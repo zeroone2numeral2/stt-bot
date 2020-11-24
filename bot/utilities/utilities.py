@@ -77,7 +77,7 @@ def is_reply_to_bot(message: Message):
 
 
 def is_service_account(user: User):
-    return user.id == 777000
+    return user.id in (777000,)
 
 
 def is_organic_user(user: User):
