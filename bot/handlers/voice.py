@@ -98,7 +98,7 @@ def on_voice_message_private_chat_forwarded(update: Update, _, session: Session,
             if not user or not user.tos_accepted:
                 logger.info("forwarded message: no user in db, or user did not accept tos")
                 update.message.reply_html(
-                    "<i>Mi dispiace, il mittente di questo messaggio non ha acconsentito al trattamento dei suoi dati</i>",
+                    "Mi dispiace, il mittente di questo messaggio non ha acconsentito al trattamento dei suoi dati",
                     quote=True
                 )
                 return
