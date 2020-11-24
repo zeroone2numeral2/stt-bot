@@ -28,7 +28,6 @@ class NewGroup(MessageFilter):
 new_group = NewGroup()
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 @decorators.pass_session(pass_user=True, pass_chat=True)
 def on_new_group_chat(update: Update, _, session: Session, user: User, chat: Chat):

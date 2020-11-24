@@ -24,7 +24,6 @@ TEXT = """Ciao! Sono un bot che permette di trascrivere i messaggi vocali inviat
 utilizzando la <a href="https://cloud.google.com/speech-to-text/">trascrizione vocale di Google</a>"""
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 @decorators.pass_session(pass_user=True)
 @decorators.ensure_tos(send_accept_message=True, send_accept_message_after_callback=True)

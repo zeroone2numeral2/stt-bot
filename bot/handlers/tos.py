@@ -58,7 +58,6 @@ eliminarli non appena il processo di trascrizione viene completato
 Per revocare il tuo consenso, usa il tasto qui sotto"""
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 @decorators.pass_session(pass_user=True)
 def on_tos_command(update: Update, _, session: [Session, None], user: [User, None]):
@@ -90,7 +89,8 @@ def on_tos_agree_button(update: Update, _, session: [Session, None], user: [User
     user.tos_accepted = True
 
     update.callback_query.message.edit_text(
-        "Ottimo, adesso il bot potrà trascrivere i tuoi messaggi vocali. Ricordati che puoi usare /tos per revocare il tuo consenso",
+        "Ottimo, adesso il bot potrà trascrivere i tuoi messaggi vocali. "
+        "Ricordati che puoi usare /tos per revocare il tuo consenso",
         disable_web_page_preview=True,
         parse_mode=ParseMode.HTML
     )

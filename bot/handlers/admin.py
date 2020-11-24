@@ -20,7 +20,6 @@ from config import config
 logger = logging.getLogger(__name__)
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 @decorators.pass_session(pass_chat=True)
 def on_ignoretos_command(update: Update, _, session: Session, chat: Chat):
@@ -101,7 +100,6 @@ def toggle_whitelisted_forwards(session: Session, tg_user: TelegramUser):
         return f"{user_first_name} non potrà più inoltrarmi qualsiasi vocale da trascrivere"
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 @decorators.pass_session()
 def on_addgroups_command_group(update: Update, _, session: Session):
@@ -116,7 +114,6 @@ def on_addgroups_command_group(update: Update, _, session: Session):
     update.message.reply_html(answer)
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 @decorators.pass_session()
 def on_addgroups_command_private(update: Update, _, session: Session):
@@ -131,7 +128,6 @@ def on_addgroups_command_private(update: Update, _, session: Session):
     update.message.reply_html(answer, quote=True)
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 @decorators.pass_session()
 def on_wforwards_command_group(update: Update, _, session: Session):
@@ -146,7 +142,6 @@ def on_wforwards_command_group(update: Update, _, session: Session):
     update.message.reply_html(answer)
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 @decorators.pass_session()
 def on_wforwards_command_private(update: Update, _, session: Session):
@@ -161,7 +156,6 @@ def on_wforwards_command_private(update: Update, _, session: Session):
     update.message.reply_html(answer, quote=True)
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 @decorators.pass_session()
 def on_forwarded_message(update: Update, _, session: Session):
@@ -193,7 +187,6 @@ def on_forwarded_message(update: Update, _, session: Session):
     update.message.reply_text("\n".join([f"{k}: {v}" for k, v in columns]))
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 def on_cleandl_command(update: Update, _):
     logger.info("/cleandl command")
@@ -215,7 +208,6 @@ def on_cleandl_command(update: Update, _):
     update.message.reply_html(f"Deleted {deleted_count} files")
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 def on_sr_command(update: Update, context: CallbackContext):
     logger.info("/sr command, args: %s", context.args)

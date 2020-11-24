@@ -15,7 +15,6 @@ TEXT = """Hmm, non capisco cosa tu voglia dire. Inviami/inoltrami un messaggio v
 /tos per dare o revocare il tuo consenso al trattamento dei tuoi dati"""
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 def on_unknown_message(update: Update, _):
     logger.info("unkwnon message in private chat")

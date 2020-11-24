@@ -85,7 +85,6 @@ def on_voice_message_private_chat(update: Update, *args, **kwargs):
         )
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
 @decorators.ensure_tos(send_accept_message=True)
 def on_large_voice_message_private_chat(update: Update, *args, **kwargs):
