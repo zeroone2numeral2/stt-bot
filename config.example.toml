@@ -1,12 +1,13 @@
 [telegram]
 token = ""
-persistence = "" # keep empty to disable percistency of temporary data (chat_data/user_data)
 workers = 4
+persistence = "persistence/data.pickle" # keep empty to disable percistency of temporary data (chat_data/user_data)
+show_commands = false # show commands popup when "/" is typed
 admins = [23646077]
-exit_unknown_groups = true
+exit_unknown_groups = true # exit groups when added by non-admin/non-whitelisted users
 voice_max_size = 10000000 # 10 mb
 silence_exceptions_private = false
-silence_exceptions_group = false
+silence_exceptions_group = true
 
 [google]
 service_account_json = ""

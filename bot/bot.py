@@ -24,6 +24,7 @@ class DummyContext:
 
 
 class VoiceMessagesBot(Updater):
+    COMMANDS_LIST_REMOVE = []
     COMMANDS_LIST = [
         BotCommand("start", "messaggio di benvenuto"),
         # BotCommand("help", "lista dei comandi"),
@@ -100,13 +101,12 @@ class VoiceMessagesBot(Updater):
             logger.debug('importing module: %s', import_path)
             importlib.import_module(import_path)
 
-    def set_commands(self):
-        self.bot.set_my_commands(self.COMMANDS_LIST)
+    def set_commands(self, show=True):
+        self.bot.set_my_commands(self.COMMANDS_LIST if show else [])
 
-    def run(self, *args, set_commands=True, **kwargs):
-        if set_commands:
-            logger.info('updating commands list...')
-            self.set_commands()
+    def run(self, *args, show_commands=True, **kwargs):
+        logger.info('updating commands list (show: %s)...', show_commands)
+        self.set_commands(show_commands)
 
         logger.info('running as @%s', self.bot.username)
         self.start_polling(*args, **kwargs)
