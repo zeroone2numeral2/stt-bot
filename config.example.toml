@@ -12,7 +12,6 @@ silence_exceptions_group = true
 [google]
 service_account_json = ""
 punctuation = false # transcribe with punctuation
-bucket_name = "" # optional, in case we want to upload voice notes to a remote google storage bucket
 
 [misc]
 remove_downloaded_files = true # file that receive an empty response are always kept
