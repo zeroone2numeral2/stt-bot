@@ -54,7 +54,7 @@ def edit_add_group(session: Session, tg_user: TelegramUser):
         return f"{user_first_name} potrà aggiungermi a chat di gruppo"
     else:
         user.can_add_to_groups = False
-        return f"{user_first_name} non potrà aggiungermi a chat di gruppo"
+        return f"{user_first_name} non potrà più aggiungermi a chat di gruppo"
 
 
 @decorators.action(ChatAction.TYPING)
@@ -63,7 +63,7 @@ def edit_add_group(session: Session, tg_user: TelegramUser):
 def on_addgroups_command_group(update: Update, _, session: Session):
     logger.info("/addgroups command in a group")
 
-    if not update.message.reply_to_message or utilities.is_reply_to_bot(update.message):
+    if not update.message.reply_to_message or not utilities.is_organic_user(update.message.reply_to_message.from_user):
         update.message.reply_text("Rispondi ad un utente")
         return
 
@@ -80,8 +80,8 @@ def on_addgroups_command_private(update: Update, _, session: Session):
 
     message: Message = update.message
     replied_to_message: Message = message.reply_to_message
-    if not replied_to_message or not utilities.is_forward(replied_to_message) or replied_to_message.forward_from.is_bot:
-        update.message.reply_text("Rispondi al messaggio inoltrato di un utente")
+    if not replied_to_message or not utilities.is_forward_from_user(replied_to_message, exclude_bots=True):
+        update.message.reply_text("Rispondi al messaggio inoltrato il cui mittente originale è un utente")
         return
 
     if utilities.user_hidden_account(replied_to_message):

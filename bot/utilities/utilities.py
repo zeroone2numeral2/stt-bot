@@ -10,7 +10,6 @@ from html import escape
 from telegram import User, Message
 from telegram.ext import PicklePersistence
 
-from bot import sttbot
 from config import config
 
 logger = logging.getLogger(__name__)
@@ -57,7 +56,16 @@ def user_hidden_account(message: Message):
     return message.forward_sender_name and not message.forward_from
 
 
-def is_forward(message: Message):
+def is_forward_from_user(message: Message, exclude_service=True, exclude_bots=False):
+    """Returns True if the original sender of the message was an user accunt. Will exlcude service account"""
+
+    if message.forward_from and exclude_service and is_service_account(message.forward_from):
+        return False
+    elif message.forward_from and exclude_bots and message.forward_from.is_bot:
+        # message.forward_from always exist with bots because they cannot hide their forwards
+        return False
+
+    # return True even when the user decided to hide their account
     return message.forward_sender_name or message.forward_from
 
 
@@ -66,3 +74,11 @@ def is_reply_to_bot(message: Message):
         raise ValueError("Message is not a reply to another message")
 
     return message.reply_to_message.from_user.is_bot
+
+
+def is_service_account(user: User):
+    return user.id == 777000
+
+
+def is_organic_user(user: User):
+    return not (is_service_account(user) or user.is_bot)
