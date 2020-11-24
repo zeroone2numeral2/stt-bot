@@ -29,7 +29,7 @@ utilizzando la <a href="https://cloud.google.com/speech-to-text/">trascrizione v
 @decorators.pass_session(pass_user=True)
 @decorators.ensure_tos(send_accept_message=True, send_accept_message_after_callback=True)
 def on_start_command(update: Update, _, session: [Session, None], user: [User, None]):
-    logger.info('/start')
+    logger.info("/start")
 
     update.message.reply_html(TEXT, disable_web_page_preview=True)
 
