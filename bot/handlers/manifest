@@ -1,6 +1,6 @@
-admin
 newgroup
 tos
 start
 voice
+admin # must be the last one just before 'fallback'
 fallback # catch everything in private chats that is not catched by previews handlers
