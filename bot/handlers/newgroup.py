@@ -26,6 +26,7 @@ def on_new_group_chat(update: Update, _):
     logger.info("new group chat: %s", update.effective_chat.title)
 
     if utilities.is_admin(update.effective_user) or not config.telegram.exit_unknown_groups:
+        update.message.reply_html("<i>Promemoria: trascriverò solamente i vocali di chi mi ha avviato in privato ed ha acconsentito al trattamento dei propri dati</i>")
         return
 
     logger.info("unauthorized: leaving...")
