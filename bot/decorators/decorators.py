@@ -98,7 +98,20 @@ def failwithmessage(func):
     return wrapped
 
 
-def pass_session(pass_user=False, pass_chat=False, create_if_not_existing=True):
+def pass_session(
+        pass_user=False,
+        pass_chat=False,
+        create_if_not_existing=True,
+        rollback_on_exception=False,
+        commit_on_exception=False
+):
+    # 'rollback_on_exception' should be false by default because we might want to commit
+    # what has been added (session.add()) to the session until the exception has been raised anyway.
+    # For the same reason, we might want to commit anyway when an exception happens using 'commit_on_exception'
+
+    if all([rollback_on_exception, commit_on_exception]):
+        raise ValueError("'rollback_on_exception' and 'commit_on_exception' are mutually exclusive")
+
     def real_decorator(func):
         @wraps(func)
         def wrapped(update: Update, context: CallbackContext, *args, **kwargs):
@@ -129,7 +142,20 @@ def pass_session(pass_user=False, pass_chat=False, create_if_not_existing=True):
 
                 kwargs['chat'] = chat
 
-            result = func(update, context, session=session, *args, **kwargs)
+            # noinspection PyBroadException
+            try:
+                result = func(update, context, session=session, *args, **kwargs)
+            except Exception:
+                if rollback_on_exception:
+                    logger.warning("exception while running an handler callback: rolling back")
+                    session.rollback()
+
+                if commit_on_exception:
+                    logger.warning("exception while running an handler callback: committing")
+                    session.commit()
+
+                # raise the exception anyway, so outher decorators can catch it
+                raise
 
             session.commit()
 
