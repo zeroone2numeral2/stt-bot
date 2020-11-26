@@ -60,7 +60,7 @@ def detect_user_utility_group(update: Update) -> [TelegramUser, None]:
         return
 
     if update.message.reply_to_message.from_user.id == update.message.from_user.id:
-        update.message.reply_text("Gli amministratori del bot possono sempre aggiungerlo a gruppi")
+        update.message.reply_text("Gli amministratori del bot sono già superuser")
         return
 
     return update.message.reply_to_message.from_user
