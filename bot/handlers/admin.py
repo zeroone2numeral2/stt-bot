@@ -204,8 +204,10 @@ def on_r_command(update: Update, context: CallbackContext, session: Session):
     avg_response_time = transcription_request.estimated_duration(session, voice.duration)
     avg_response_time = round(avg_response_time, 1) if avg_response_time else None
 
-    message_to_edit = update.message.reply_to_message.reply_html(f"Inizio la trascrizione (hertz: {voice.sample_rate}, "
-                                                                 f"avg: {avg_response_time})...")
+    message_to_edit = update.message.reply_to_message.reply_html(f"Inizio la trascrizione\n"
+                                                                 f"<code>sample rate: yet to parse\n"
+                                                                 f"forced sample rate: {voice.forced_sample_rate_str}\n"
+                                                                 f"expected time: {avg_response_time}</code>", quote=True)
 
     request = TranscriptionRequest(audio_duration=voice.duration)
     start = datetime.datetime.now()
@@ -219,7 +221,12 @@ def on_r_command(update: Update, context: CallbackContext, session: Session):
         request.successful(elapsed, sample_rate=voice.sample_rate)
         session.add(request)  # add the request instance to the session only on success
 
-    transcription = f"{raw_transcript} <b>[{confidence} a:{voice.sample_rate_str}/f:{voice.forced_sample_rate} est:{avg_response_time}/act:{elapsed}]</b>"
+    transcription = f"{raw_transcript}\n" \
+                    f"<code>confidence: {confidence}\n" \
+                    f"detected sample rate: {voice.sample_rate_str}\n" \
+                    f"forced sample rate: {voice.forced_sample_rate_str}\n" \
+                    f"estimated time: {avg_response_time}\n" \
+                    f"elapsed time: {elapsed}</code>"
 
     message_to_edit.edit_text(
         transcription,

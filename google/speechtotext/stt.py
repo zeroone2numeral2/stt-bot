@@ -88,15 +88,26 @@ class VoiceMessage:
 
         return voice
 
+    @staticmethod
+    def pretty_sample_rate(value):
+        if value % 1000 == 0:
+            return f"{int(value / 1000)}kHz"
+        else:
+            return f"{value / 1000}kHz"
+
     @property
     def sample_rate_str(self):
         if self.sample_rate is None:
             raise ValueError("hertz rate is None")
 
-        if self.sample_rate % 1000 == 0:
-            return f"{int(self.sample_rate / 1000)}kHz"
-        else:
-            return f"{self.sample_rate / 1000}kHz"
+        return self.pretty_sample_rate(self.sample_rate)
+
+    @property
+    def forced_sample_rate_str(self):
+        if self.forced_sample_rate is None:
+            return None
+
+        return self.pretty_sample_rate(self.forced_sample_rate)
 
     def _generate_recognition_audio(self):
         raise NotImplementedError("this method must be overridden")
