@@ -1,8 +1,8 @@
 """Added punctuation property to Chat
 
-Revision ID: 4686e87041c6
+Revision ID: 84753caaa9af
 Revises: 
-Create Date: 2020-11-26 10:37:33.750082
+Create Date: 2020-11-26 12:06:24.685003
 
 """
 from alembic import op
@@ -10,15 +10,15 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '4686e87041c6'
+revision = '84753caaa9af'
 down_revision = None
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    pass
+    op.add_column('chats', sa.Column('punctuation', sa.Boolean))
 
 
 def downgrade():
-    pass
+    op.drop_column('chats', 'punctuation')
