@@ -25,7 +25,10 @@ TEXT_HIDDEN_SENDER = """Mi dispiace, il mittente di questo messaggio vocale ha r
 accessibile tramite i messaggi inoltrati, quindi non posso verificare che abbia accettato i termini di servizio"""
 
 
-def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Update) -> Tuple[Message, Union[str, None]]:
+def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Update, punctuation: [bool, None] = None) -> Tuple[Message, Union[str, None]]:
+    if punctuation is None:
+        punctuation = config.google.punctuation
+
     if voice.short:
         text = "<i>Inizio trascrizione...</i>"
     else:
@@ -36,7 +39,7 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
     start = datetime.datetime.now()
 
     try:
-        raw_transcript, confidence = voice.recognize(punctuation=config.google.punctuation)
+        raw_transcript, confidence = voice.recognize(punctuation=punctuation)
     except UnsupportedFormat:
         logger.error("unsupported format while transcribing voice %s", voice.file_path)
         if not config.misc.keep_files_on_error:
@@ -173,7 +176,7 @@ def on_voice_message_group_chat(update: Update, _, session: Session, user: User,
 
     voice = VoiceMessageLocal.from_message(update.message, download=True)
 
-    message_to_edit, transcription = recognize_voice(voice, update)
+    message_to_edit, transcription = recognize_voice(voice, update, punctuation=chat.punctuation)
 
     if not transcription:
         message_to_edit.delete()

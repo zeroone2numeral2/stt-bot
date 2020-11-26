@@ -9,6 +9,7 @@ class Chat(Base):
     chat_id = Column(Integer, primary_key=True)
     enabled = Column(Boolean, default=True)
     language = Column(String, default="it-IT")
+    punctuation = Column(Boolean, default=None)
     ignore_tos = Column(Boolean, default=False)
     ignore_if_shorter_than = Column(Integer, default=None)
     ignore_if_longer_than = Column(Integer, default=None)
