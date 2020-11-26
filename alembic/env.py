@@ -15,8 +15,13 @@ fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from bot.database.base import Base
-target_metadata = Base
+
+# see https://stackoverflow.com/a/58891735
+import sys
+sys.path = ['', '..'] + sys.path[1:]
+
+from bot.database import Base
+target_metadata = Base.metadata
 # target_metadata = None
 
 # other values from the config, defined by the needs of env.py,
