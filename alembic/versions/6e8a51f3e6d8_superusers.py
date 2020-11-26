@@ -18,8 +18,11 @@ depends_on = None
 
 def upgrade():
     op.add_column('users', sa.Column('superuser', sa.Boolean))
-    op.drop_column('users', 'whitelisted_forwards')
-    op.drop_column('users', 'can_add_to_groups')
+
+    # https://stackoverflow.com/a/31140916/13350541
+    with op.batch_alter_table('users') as batch_op:
+        batch_op.drop_column('whitelisted_forwards')
+        batch_op.drop_column('can_add_to_groups')
 
 
 def downgrade():
