@@ -13,6 +13,7 @@ from bot.custom_filters import CFilters
 from google.speechtotext import VoiceMessageLocal
 from bot.database.models.chat import Chat
 from bot.database.models.user import User
+from bot.database.queries import user as quser
 from bot.decorators import decorators
 from bot.utilities import utilities
 from config import config
@@ -81,10 +82,10 @@ def toggle_superuser(session: Session, tg_user: TelegramUser):
     user: User = get_or_create_user(session, tg_user.id)
 
     if not user.superuser:
-        user.make_superuser()
+        user.make_superuser(name=tg_user.full_name)
         return f"{user_first_name} è superuser, potrà aggiungermi a gruppi/inoltrarmi vocali da trascrivere"
     else:
-        user.superuser = False
+        user.revoke_superuser()
         return f"{user_first_name} non è più superuser"
 
 
@@ -114,6 +115,20 @@ def on_superuser_command_private(update: Update, _, session: Session):
     answer = toggle_superuser(session, target_user)
 
     update.message.reply_html(answer, quote=True)
+
+
+@decorators.failwithmessage
+@decorators.pass_session()
+def on_list_superusers_command(update: Update, _, session: Session):
+    logger.info("/superusers command")
+
+    superusers = quser.superusers(session)
+    if not superusers:
+        update.message.reply_html("Non ci sono superuser salvati")
+        return
+
+    names = [user.name for user in superusers]
+    update.message.reply_text(f"Superusers: {', '.join(names)}")
 
 
 @decorators.failwithmessage
@@ -198,8 +213,9 @@ def on_sr_command(update: Update, context: CallbackContext):
 
 
 sttbot.add_handler(CommandHandler("ignoretos", on_ignoretos_command, filters=Filters.group & CFilters.from_admin))
-sttbot.add_handler(CommandHandler("superuser", on_superuser_command_group, filters=Filters.group & CFilters.from_admin))
-sttbot.add_handler(CommandHandler("superuser", on_superuser_command_private, filters=Filters.private & CFilters.from_admin))
+sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_group, filters=Filters.group & CFilters.from_admin))
+sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_private, filters=Filters.private & CFilters.from_admin))
+sttbot.add_handler(CommandHandler(["superusers", "sus"], on_list_superusers_command, filters=Filters.private & CFilters.from_admin))
 sttbot.add_handler(MessageHandler(Filters.private & Filters.forwarded & CFilters.from_admin, on_forwarded_message))
 sttbot.add_handler(CommandHandler("cleandl", on_cleandl_command, filters=Filters.private & CFilters.from_admin))
 sttbot.add_handler(CommandHandler("sr", on_sr_command, filters=Filters.reply & CFilters.from_admin))

@@ -101,7 +101,7 @@ def on_tos_agree_button(update: Update, _, session: [Session, None], user: [User
 def on_tos_revoke_button(update: Update, _, session: [Session, None], user: [User, None]):
     logger.info('revoke tos button')
 
-    user.tos_accepted = False
+    user.revoke_tos()
 
     update.callback_query.message.edit_text(
         "Consenso revocato. D'ora in avanti il bot ignorerà i tuoi messaggi vocali",
