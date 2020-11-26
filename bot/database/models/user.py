@@ -15,7 +15,7 @@ class User(Base):
         self.user_id = user_id
 
     def make_superuser(self):
-        self.tos_accepted = True
+        # self.tos_accepted = True
         self.superuser = True
 
 
