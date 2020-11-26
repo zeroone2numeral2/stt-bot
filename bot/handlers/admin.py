@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 
@@ -13,6 +14,8 @@ from bot.custom_filters import CFilters
 from google.speechtotext import VoiceMessageLocal
 from bot.database.models.chat import Chat
 from bot.database.models.user import User
+from bot.database.models.transcription_request import TranscriptionRequest
+from bot.database.queries import transcription_request
 from bot.database.queries import user as quser
 from bot.decorators import decorators
 from bot.utilities import utilities
@@ -184,26 +187,39 @@ def on_cleandl_command(update: Update, _):
 
 
 @decorators.failwithmessage
-def on_sr_command(update: Update, context: CallbackContext):
-    logger.info("/sr command, args: %s", context.args)
-
-    if not context.args:
-        update.message.reply_html("Specifica un sample rate (in hertz)", quote=True)
-        return
+@decorators.pass_session()
+def on_r_command(update: Update, context: CallbackContext, session: Session):
+    logger.info("/r command, args: %s", context.args)
 
     if not update.message.reply_to_message.voice:
         update.message.reply_html("Rispondi ad un messaggio vocale", quote=True)
         return
 
-    sample_rate = int(context.args[0])
+    if not context.args:
+        voice = VoiceMessageLocal.from_message(update.message.reply_to_message)
+    else:
+        sample_rate = int(context.args[0])
+        voice = VoiceMessageLocal.from_message(update.message.reply_to_message, force_sample_rate=sample_rate)
 
-    voice = VoiceMessageLocal.from_message(update.message.reply_to_message, force_sample_rate=sample_rate)
+    avg_response_time = transcription_request.estimated_duration(session, voice.duration)
+    avg_response_time = round(avg_response_time, 1) if avg_response_time else None
 
-    message_to_edit = update.message.reply_to_message.reply_html(f"Inizio la trascrizione (hertz: {sample_rate})...")
+    message_to_edit = update.message.reply_to_message.reply_html(f"Inizio la trascrizione (hertz: {voice.sample_rate}, "
+                                                                 f"avg: {avg_response_time})...")
+
+    request = TranscriptionRequest(audio_duration=voice.duration)
+    start = datetime.datetime.now()
 
     raw_transcript, confidence = voice.recognize(punctuation=config.google.punctuation)
 
-    transcription = f"{raw_transcript} <b>[{confidence} a:{voice.sample_rate_str}/f:{voice.forced_sample_rate}]</b>"
+    end = datetime.datetime.now()
+    elapsed = round((end - start).total_seconds(), 1)
+
+    if raw_transcript:
+        request.successful(elapsed, sample_rate=voice.sample_rate)
+        session.add(request)  # add the request instance to the session only on success
+
+    transcription = f"{raw_transcript} <b>[{confidence} a:{voice.sample_rate_str}/f:{voice.forced_sample_rate} est:{avg_response_time}/act:{elapsed}]</b>"
 
     message_to_edit.edit_text(
         transcription,
@@ -218,4 +234,4 @@ sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_priv
 sttbot.add_handler(CommandHandler(["superusers", "sus"], on_list_superusers_command, filters=Filters.private & CFilters.from_admin))
 sttbot.add_handler(MessageHandler(Filters.private & Filters.forwarded & CFilters.from_admin, on_forwarded_message))
 sttbot.add_handler(CommandHandler("cleandl", on_cleandl_command, filters=Filters.private & CFilters.from_admin))
-sttbot.add_handler(CommandHandler("sr", on_sr_command, filters=Filters.reply & CFilters.from_admin))
+sttbot.add_handler(CommandHandler("r", on_r_command, filters=Filters.reply & CFilters.from_admin))

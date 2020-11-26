@@ -16,5 +16,10 @@ class TranscriptionRequest(Base):
         self.audio_duration = audio_duration
         self.sample_rate = sample_rate
 
+    def successful(self, response_time: float, sample_rate: [int, None] = None):
+        self.sample_rate = sample_rate
+        self.response_time = response_time
+        self.success = True
+
 
 Base.metadata.create_all(engine)

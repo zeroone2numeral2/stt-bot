@@ -75,9 +75,7 @@ def recognize_voice(
 
         return message_to_edit, None
 
-    request.sample_rate = voice.sample_rate
-    request.response_time = elapsed
-    request.success = True
+    request.successful(elapsed, sample_rate=voice.sample_rate)
     session.add(request)  # add the request instance to the session only on success
 
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
