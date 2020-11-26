@@ -125,7 +125,7 @@ def on_large_voice_message_private_chat(update: Update, *args, **kwargs):
 def on_voice_message_private_chat_forwarded(update: Update, _, session: Session, user: User):
     logger.info("forwarded voice message in a private chat, mime type: %s", update.message.voice.mime_type)
 
-    if not utilities.is_admin(update.effective_user) and not user.whitelisted_forwards:
+    if not utilities.is_admin(update.effective_user) and not user.superuser:
         if utilities.user_hidden_account(update.message):
             logger.info("forwarded message: original sender hidden their account")
             update.message.reply_html(TEXT_HIDDEN_SENDER)
@@ -139,8 +139,8 @@ def on_voice_message_private_chat_forwarded(update: Update, _, session: Session,
                     quote=True
                 )
                 return
-    elif user.whitelisted_forwards:
-        logger.info("user forwards are whitelisted")
+    elif user.superuser:
+        logger.info("user forwards are whitelisted (superuser)")
 
     voice = VoiceMessageLocal.from_message(update.message)
 
@@ -170,14 +170,13 @@ def on_voice_message_group_chat(update: Update, _, session: Session, user: User,
     if not chat.ignore_tos:
         if utilities.user_hidden_account(update.message):
             # the message is a forwarded message
-            if not update.message.forward_from and update.message.forward_sender_name:
-                logger.info("forwarded message: original sender hidden their account")
-                return
+            logger.info("forwarded message: original sender hidden their account")
+            return
 
-            user: [User, None] = session.query(User).filter(User.user_id == update.message.forward_from.id).one_or_none()
-            if not user or not user.tos_accepted:
-                logger.info("forwarded message: no user in db, or user did not accept tos")
-                return
+        user: [User, None] = session.query(User).filter(User.user_id == update.message.forward_from.id).one_or_none()
+        if not user or not user.tos_accepted:
+            logger.info("forwarded message: no user in db, or user did not accept tos")
+            return
 
         if not user.tos_accepted:
             logger.info("user did not accept tos")

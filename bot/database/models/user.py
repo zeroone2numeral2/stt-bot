@@ -9,11 +9,14 @@ class User(Base):
     user_id = Column(Integer, primary_key=True)
     enabled = Column(Boolean, default=True)
     tos_accepted = Column(Boolean, default=False)
-    whitelisted_forwards = Column(Boolean, default=False)
-    can_add_to_groups = Column(Boolean, default=False)
+    superuser = Column(Boolean, default=False)
 
     def __init__(self, user_id):
         self.user_id = user_id
+
+    def make_superuser(self):
+        self.tos_accepted = True
+        self.superuser = True
 
 
 Base.metadata.create_all(engine)

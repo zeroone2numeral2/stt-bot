@@ -33,7 +33,7 @@ new_group = NewGroup()
 def on_new_group_chat(update: Update, _, session: Session, user: User, chat: Chat):
     logger.info("new group chat: %s", update.effective_chat.title)
 
-    if utilities.is_admin(update.effective_user) or user.can_add_to_groups or not config.telegram.exit_unknown_groups:
+    if utilities.is_admin(update.effective_user) or user.superuser or not config.telegram.exit_unknown_groups:
         update.message.reply_html(
             "<i>Promemoria: trascriverò solamente i vocali di chi mi ha avviato in privato ed "
             "ha acconsentito al trattamento dei propri dati</i>",

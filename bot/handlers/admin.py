@@ -76,82 +76,42 @@ def get_or_create_user(session: Session, user_id: int) -> User:
     return user
 
 
-def toggle_add_group(session: Session, tg_user: TelegramUser):
+def toggle_superuser(session: Session, tg_user: TelegramUser):
     user_first_name = utilities.escape_html(tg_user.first_name)
     user: User = get_or_create_user(session, tg_user.id)
 
-    if not user.can_add_to_groups:
-        user.can_add_to_groups = True
-        return f"{user_first_name} potrà aggiungermi a chat di gruppo"
+    if not user.superuser:
+        user.make_superuser()
+        return f"{user_first_name} è superuser, potrà aggiungermi a gruppi/inoltrarmi vocali da trascrivere"
     else:
-        user.can_add_to_groups = False
-        return f"{user_first_name} non potrà più aggiungermi a chat di gruppo"
-
-
-def toggle_whitelisted_forwards(session: Session, tg_user: TelegramUser):
-    user_first_name = utilities.escape_html(tg_user.first_name)
-    user: User = get_or_create_user(session, tg_user.id)
-
-    if not user.whitelisted_forwards:
-        user.whitelisted_forwards = True
-        return f"{user_first_name} potrà inoltrarmi qualsiasi vocale da trascrivere"
-    else:
-        user.whitelisted_forwards = False
-        return f"{user_first_name} non potrà più inoltrarmi qualsiasi vocale da trascrivere"
+        user.superuser = False
+        return f"{user_first_name} non è più superuser"
 
 
 @decorators.failwithmessage
 @decorators.pass_session()
-def on_addgroups_command_group(update: Update, _, session: Session):
-    logger.info("/addgroups command in a group")
+def on_superuser_command_group(update: Update, _, session: Session):
+    logger.info("/superuser command in a group")
 
     target_user = detect_user_utility_group(update)
     if not target_user:
         return
 
-    answer = toggle_add_group(session, target_user)
+    answer = toggle_superuser(session, target_user)
 
     update.message.reply_html(answer)
 
 
 @decorators.failwithmessage
 @decorators.pass_session()
-def on_addgroups_command_private(update: Update, _, session: Session):
-    logger.info("/addgroups command in private")
+def on_superuser_command_private(update: Update, _, session: Session):
+    logger.info("/super command in private")
 
     target_user = detect_user_utility_private(update)
     if not target_user:
         return
 
-    answer = toggle_add_group(session, target_user)
-
-    update.message.reply_html(answer, quote=True)
-
-
-@decorators.failwithmessage
-@decorators.pass_session()
-def on_wforwards_command_group(update: Update, _, session: Session):
-    logger.info("/wforwards command in a group")
-
-    target_user = detect_user_utility_group(update)
-    if not target_user:
-        return
-
-    answer = toggle_whitelisted_forwards(session, target_user)
-
-    update.message.reply_html(answer)
-
-
-@decorators.failwithmessage
-@decorators.pass_session()
-def on_wforwards_command_private(update: Update, _, session: Session):
-    logger.info("/wforwards command in private")
-
-    target_user = detect_user_utility_private(update)
-    if not target_user:
-        return
-
-    answer = toggle_whitelisted_forwards(session, target_user)
+    answer = toggle_superuser(session, target_user)
 
     update.message.reply_html(answer, quote=True)
 
@@ -238,10 +198,8 @@ def on_sr_command(update: Update, context: CallbackContext):
 
 
 sttbot.add_handler(CommandHandler("ignoretos", on_ignoretos_command, filters=Filters.group & CFilters.from_admin))
-sttbot.add_handler(CommandHandler("addgroups", on_addgroups_command_group, filters=Filters.group & CFilters.from_admin))
-sttbot.add_handler(CommandHandler("addgroups", on_addgroups_command_private, filters=Filters.private & CFilters.from_admin))
-sttbot.add_handler(CommandHandler("wforwards", on_wforwards_command_group, filters=Filters.group & CFilters.from_admin))
-sttbot.add_handler(CommandHandler("wforwards", on_wforwards_command_private, filters=Filters.private & CFilters.from_admin))
+sttbot.add_handler(CommandHandler("superuser", on_superuser_command_group, filters=Filters.group & CFilters.from_admin))
+sttbot.add_handler(CommandHandler("superuser", on_superuser_command_private, filters=Filters.private & CFilters.from_admin))
 sttbot.add_handler(MessageHandler(Filters.private & Filters.forwarded & CFilters.from_admin, on_forwarded_message))
 sttbot.add_handler(CommandHandler("cleandl", on_cleandl_command, filters=Filters.private & CFilters.from_admin))
 sttbot.add_handler(CommandHandler("sr", on_sr_command, filters=Filters.reply & CFilters.from_admin))
