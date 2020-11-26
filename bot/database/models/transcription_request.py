@@ -12,8 +12,9 @@ class TranscriptionRequest(Base):
     response_time = Column(Integer, default=None, nullable=True)
     success = Column(Boolean, default=None, nullable=True)
 
-    def __init__(self, audio_duration):
+    def __init__(self, audio_duration, sample_rate=None):
         self.audio_duration = audio_duration
+        self.sample_rate = sample_rate
 
 
 Base.metadata.create_all(engine)

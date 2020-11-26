@@ -10,9 +10,11 @@ from telegram import ChatAction, Update, ParseMode, Message
 
 from bot import sttbot
 from bot.custom_filters import CFilters
-from bot.database.models.chat import Chat
 from bot.decorators import decorators
+from bot.database.models.chat import Chat
 from bot.database.models.user import User
+from bot.database.models.transcription_request import TranscriptionRequest
+from bot.database.queries import transcription_request
 from bot.utilities import utilities
 from google.speechtotext import VoiceMessageLocal
 from google.speechtotext import VoiceMessageRemote
@@ -25,18 +27,28 @@ TEXT_HIDDEN_SENDER = """Mi dispiace, il mittente di questo messaggio vocale ha r
 accessibile tramite i messaggi inoltrati, quindi non posso verificare che abbia accettato i termini di servizio"""
 
 
-def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Update, punctuation: [bool, None] = None) -> Tuple[Message, Union[str, None]]:
+def recognize_voice(
+        voice: [VoiceMessageLocal, VoiceMessageRemote],
+        update: Update,
+        session: Session,
+        punctuation: [bool, None] = None,
+) -> Tuple[Message, Union[str, None]]:
     if punctuation is None:
         punctuation = config.google.punctuation
 
     if voice.short:
         text = "<i>Inizio trascrizione...</i>"
     else:
-        text = "<i>Inizio trascrizione... Per i vocali > 1 minuto potrebbe volerci un po' di più</i>"
+        avg_response_time = transcription_request.estimated_duration(session, voice.duration)
+        text = "<i>Inizio trascrizione... Per i vocali >1 minuto potrebbe volerci un po' di più</i>"
+        if avg_response_time:
+            text = text.replace("</i>", f" (stimato: {round(avg_response_time, 1)}\")</i>")
 
     message_to_edit = update.message.reply_html(text, disable_notification=True, quote=True)
 
     start = datetime.datetime.now()
+
+    request = TranscriptionRequest(audio_duration=voice.duration)
 
     try:
         raw_transcript, confidence = voice.recognize(punctuation=punctuation)
@@ -63,9 +75,14 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
 
         return message_to_edit, None
 
+    request.sample_rate = voice.sample_rate
+    request.response_time = elapsed
+    request.success = True
+    session.add(request)  # add the request instance to the session only on success
+
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
 
-    transcription = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {voice.sample_rate_str} {elapsed}s]</b>"
+    transcription = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {voice.sample_rate_str} {elapsed}\"]</b>"
 
     if config.misc.remove_downloaded_files:
         voice.cleanup()
@@ -77,12 +94,12 @@ def recognize_voice(voice: [VoiceMessageLocal, VoiceMessageRemote], update: Upda
 @decorators.failwithmessage
 @decorators.pass_session(pass_user=True)
 @decorators.ensure_tos(send_accept_message=True)
-def on_voice_message_private_chat(update: Update, *args, **kwargs):
+def on_voice_message_private_chat(update: Update, _, session: Session, *args, **kwargs):
     logger.info("voice message in a private chat, mime type: %s", update.message.voice.mime_type)
 
     voice = VoiceMessageLocal.from_message(update.message)
 
-    message_to_edit, transcription = recognize_voice(voice, update)
+    message_to_edit, transcription = recognize_voice(voice, update, session)
 
     if not transcription:
         message_to_edit.edit_text("<i>Impossibile trascrivere messaggio vocale</i>", parse_mode=ParseMode.HTML)
@@ -104,7 +121,7 @@ def on_large_voice_message_private_chat(update: Update, *args, **kwargs):
 
 @decorators.action(ChatAction.TYPING)
 @decorators.failwithmessage
-@decorators.pass_session(pass_user=True)
+@decorators.pass_session(pass_user=True, commit_on_exception=True)
 def on_voice_message_private_chat_forwarded(update: Update, _, session: Session, user: User):
     logger.info("forwarded voice message in a private chat, mime type: %s", update.message.voice.mime_type)
 
@@ -127,7 +144,7 @@ def on_voice_message_private_chat_forwarded(update: Update, _, session: Session,
 
     voice = VoiceMessageLocal.from_message(update.message)
 
-    message_to_edit, transcription = recognize_voice(voice, update)
+    message_to_edit, transcription = recognize_voice(voice, update, session)
 
     if not transcription:
         message_to_edit.edit_text("<i>Impossibile trascrivere messaggio vocale</i>", parse_mode=ParseMode.HTML)
@@ -176,7 +193,7 @@ def on_voice_message_group_chat(update: Update, _, session: Session, user: User,
 
     voice = VoiceMessageLocal.from_message(update.message, download=True)
 
-    message_to_edit, transcription = recognize_voice(voice, update, punctuation=chat.punctuation)
+    message_to_edit, transcription = recognize_voice(voice, update, session, punctuation=chat.punctuation)
 
     if not transcription:
         message_to_edit.delete()
