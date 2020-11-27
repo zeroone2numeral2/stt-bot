@@ -89,3 +89,13 @@ def kv_dict_to_string(dictionary: dict, sep: str = "\n", return_if_empty=None):
         return return_if_empty
 
     return sep.join([f"{k}: {v}" for k, v in dictionary.items()])
+
+
+def human_readable_size(size, precision=2):
+    suffixes = ['b', 'kb', 'mb', 'gb', 'tb']
+    suffix_index = 0
+    while size > 1024 and suffix_index < 4:
+        suffix_index += 1  # increment the index of the suffix
+        size = size / 1024.0  # apply the division
+
+    return '%.*f %s' % (precision, size, suffixes[suffix_index])

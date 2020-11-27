@@ -262,6 +262,7 @@ def on_parse_command(update: Update, context: CallbackContext, session: Session)
         f"{utilities.kv_dict_to_string(voice.parsed_header_data, return_if_empty='-')}\n"
         f"\n"
         f"[TG]\n"
+        f"size: {utilities.human_readable_size(update.message.reply_to_message.voice.file_size)}\n"
         f"mime type: {update.message.reply_to_message.voice.mime_type}"
         f"</code>",
         quote=True
