@@ -160,29 +160,24 @@ def on_voice_message_private_chat_forwarded(update: Update, _, session: Session,
 def on_voice_message_group_chat(update: Update, _, session: Session, user: User, chat: Chat, *args, **kwargs):
     logger.info("voice message in a group chat")
 
-    # ignore:
-    # - forwarded voice messages from users who did not accept the ToS
-    # - forwarded voice messages from user who hid their accounts
-    # - voice messages from members that did not accept the ToS
-
-    if not chat.ignore_tos:
-        if utilities.user_hidden_account(update.message):
-            # the message is a forwarded message
-            logger.info("forwarded message: original sender hidden their account")
-            return
-
+    is_forward_from_user = utilities.is_forward_from_user(update.message)
+    if chat.ignore_tos:
+        # if chat.ignore_tos is true, don't make any control on whether the sender of audios sent in this chat
+        # have accepted the data usage notice or not
+        logger.info("chat %d is set to ignore data agreement of users", update.effective_chat.id)
+    elif not is_forward_from_user and not user.tos_accepted:
+        logger.info("not forward and sender did not accept tos: ignoring voice message")
+        return
+    elif is_forward_from_user and utilities.user_hidden_account(update.message):
+        logger.info("forwarded message (original sender with account): we can transcribe the audio")
+    elif is_forward_from_user and update.message.forward_from.is_bot:
+        logger.info("forwarded from bot: we can transcribe the audio")
+    elif is_forward_from_user:
+        # forwarded message from an user who did not decide to hide their account
         user: [User, None] = session.query(User).filter(User.user_id == update.message.forward_from.id).one_or_none()
         if not user or not user.tos_accepted:
             logger.info("forwarded message: no user in db, or user did not accept tos")
             return
-
-        if not user.tos_accepted:
-            logger.info("user did not accept tos")
-            return
-    else:
-        # if chat.ignore_tos is true, don't make any control on whether the sender of audios sent in this chat
-        # have accepted the data usage notice or not
-        logger.info("chat %d is set to ignore data agreement of users", update.effective_chat.id)
 
     if update.message.voice.file_size and update.message.voice.file_size > config.telegram.voice_max_size:
         logger.info("voice message is too large (%d bytes)", update.message.voice.file_size)
