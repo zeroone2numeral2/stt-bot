@@ -58,11 +58,11 @@ class VoiceMessage:
         self.short = True
         self.sample_rate = None
         self.forced_sample_rate = force_sample_rate
-        self.channels = None  # currently not used
         self.client: SpeechClient = speech_client
         self.max_alternatives = max_alternatives
         self.recognition_audio: [RecognitionAudio, None] = None
         self.recognition_config: [RecognitionConfig, None] = None
+        self.parsed_header_data = {}
 
         if self.duration > 59:
             self.short = False
@@ -220,8 +220,14 @@ class VoiceMessage:
             if (version & 0xF0) != 0:
                 raise ValueError("only major version 0 supported")
 
-            self.channels = channels
             self.sample_rate = sample_rate
+            self.parsed_header_data = {
+                "version": version,
+                "channels": channels,
+                "pre_skip": pre_skip,
+                "gain": gain,
+                "mapping_type": mapping_type
+            }
 
     def recognize(self, max_alternatives: [int, None] = None, punctuation: bool = True, *args, **kwargs) -> Tuple[Union[str, None], Union[float, None]]:
         self._generate_recognition_audio()
