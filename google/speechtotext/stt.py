@@ -239,6 +239,8 @@ class VoiceMessage:
             return self._recognize_short(*args, **kwargs)
 
     def cleanup(self):
+        logger.debug("cleaning up file: %s", self.file_path)
+
         try:
             os.remove(self.file_path)
         except FileNotFoundError:
