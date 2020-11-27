@@ -93,7 +93,8 @@ def on_voice_message_private_chat_forwarded(update: Update, _, session: Session,
 def on_voice_message_group_chat(update: Update, _, session: Session, user: User, chat: Chat, *args, **kwargs):
     logger.info("voice message in a group chat")
 
-    ignore_message, _ = helpers.ignore_message_group(session, user, chat, update.message)
+    ignore_message, reason = helpers.ignore_message_group(session, user, chat, update.message)
+    logger.info("process voice: %s, reason: %s", not ignore_message, reason)
     if ignore_message:
         return
 

@@ -86,27 +86,21 @@ def ignore_message_group(
         chat: Chat,
         message: Message
 ):
-    its_ok_because = "sender accepted tos"
     is_forward_from_user = utilities.is_forward_from_user(message)
     if chat.ignore_tos:
-        logger.info("chat %d is set to ignore tos: we can transcribe the audio", message.chat.id)
-        its_ok_because = "chat is set to ignore tos"
+        return False, "chat is set to ignore tos"
     elif not is_forward_from_user and not user.tos_accepted:
-        logger.info("not forward and sender did not accept tos: ignoring voice message")
-        return True, "sender did not accept tos"
+        return True, "non-forwarded and sender did not accept tos"
     elif is_forward_from_user and utilities.user_hidden_account(message):
-        logger.info("forwarded message (original sender with hidden account): we can transcribe the audio")
-        its_ok_because = "forwarded message: original sender with hidden account"
+        return False, "forwarded message: original sender with hidden account"
     elif is_forward_from_user and message.forward_from.is_bot:
-        logger.info("forwarded from bot: we can transcribe the audio")
-        its_ok_because = "forwarded message: original is a bot"
+        return False, "forwarded message: original sender is a bot"
     elif is_forward_from_user:
         # forwarded message from an user who did not decide to hide their account
         user: [User, None] = session.query(User).filter(User.user_id == message.forward_from.id).one_or_none()
         if not user or not user.tos_accepted:
-            logger.info("forwarded message: no user in db, or user did not accept tos: ignoring voice message")
-            return True, "forward from user: user not in db or did not accept tos"
+            return True, "forwarded message: original sender not in db or did not accept tos"
         else:
-            its_ok_because = "forwarded message: user accepted tos"
+            return False, "forwarded message: original sender accepted tos"
 
-    return False, its_ok_because
+    return False, "sender accepted tos"
