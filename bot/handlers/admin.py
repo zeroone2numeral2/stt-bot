@@ -252,7 +252,7 @@ def on_parse_command(update: Update, context: CallbackContext, session: Session)
 
     avg_response_time = transcription_request.estimated_duration(session, voice.duration) or '-'
 
-    update.message.reply_html(
+    update.message.reply_to_message.reply_html(
         f"<code>"
         f"[DB]\n"
         f"estimated time: {avg_response_time}\n"
