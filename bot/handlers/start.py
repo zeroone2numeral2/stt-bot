@@ -21,7 +21,9 @@ from config import config
 logger = logging.getLogger(__name__)
 
 TEXT = """Ciao! Sono un bot che permette di trascrivere i messaggi vocali inviati dagli utenti di in gruppo, \
-utilizzando la <a href="https://cloud.google.com/speech-to-text/">trascrizione vocale di Google</a>"""
+utilizzando la <a href="https://cloud.google.com/speech-to-text/">trascrizione vocale di Google</a>
+
+Usa /tips o /help per ricevere alcuni suggerimenti sull'utilizzo del bot"""
 
 
 @decorators.catchexceptions()
@@ -33,4 +35,4 @@ def on_start_command(update: Update, _, session: [Session, None], user: [User, N
     update.message.reply_html(TEXT, disable_web_page_preview=True)
 
 
-sttbot.add_handler(CommandHandler('start', on_start_command, filters=Filters.private))
+sttbot.add_handler(CommandHandler("start", on_start_command, filters=Filters.private))

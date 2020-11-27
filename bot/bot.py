@@ -27,7 +27,7 @@ class VoiceMessagesBot(Updater):
     COMMANDS_LIST_REMOVE = []
     COMMANDS_LIST = [
         BotCommand("start", "messaggio di benvenuto"),
-        # BotCommand("help", "lista dei comandi"),
+        BotCommand("tips", "alcuni suggerimenti sull'utilizzo del bot"),
         BotCommand("tos", "concedi/revoca consenso al trattamento dei tuoi dati"),
     ]
 
