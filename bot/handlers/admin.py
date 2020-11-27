@@ -202,7 +202,6 @@ def on_r_command(update: Update, context: CallbackContext, session: Session):
         voice = VoiceMessageLocal.from_message(update.message.reply_to_message, force_sample_rate=sample_rate)
 
     avg_response_time = transcription_request.estimated_duration(session, voice.duration)
-    avg_response_time = round(avg_response_time, 1) if avg_response_time else None
 
     voice.parse_sample_rate()  # we parse it so we can include it in the message we send
 
@@ -237,6 +236,28 @@ def on_r_command(update: Update, context: CallbackContext, session: Session):
     )
 
 
+@decorators.catchexceptions(force_message_on_exception=True)
+@decorators.pass_session()
+def on_parse_command(update: Update, context: CallbackContext, session: Session):
+    logger.info("/parse command, args: %s", context.args)
+
+    if not update.message.reply_to_message.voice:
+        update.message.reply_html("Rispondi ad un messaggio vocale", quote=True)
+        return
+
+    voice = VoiceMessageLocal.from_message(update.message.reply_to_message)
+
+    voice.parse_sample_rate()
+    voice.cleanup()
+
+    avg_response_time = transcription_request.estimated_duration(session, voice.duration) or '-'
+
+    update.message.reply_html(
+        f"<code>sample rate: {voice.sample_rate_str}\nestimated time: {avg_response_time}</code>",
+        quote=True
+    )
+
+
 sttbot.add_handler(CommandHandler("ignoretos", on_ignoretos_command, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_group, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_private, filters=Filters.private & CFilters.from_admin))
@@ -244,3 +265,4 @@ sttbot.add_handler(CommandHandler(["superusers", "sus"], on_list_superusers_comm
 sttbot.add_handler(MessageHandler(Filters.private & Filters.forwarded & CFilters.from_admin, on_forwarded_message))
 sttbot.add_handler(CommandHandler("cleandl", on_cleandl_command, filters=Filters.private & CFilters.from_admin))
 sttbot.add_handler(CommandHandler("r", on_r_command, filters=Filters.reply & CFilters.from_admin))
+sttbot.add_handler(CommandHandler("parse", on_parse_command, filters=Filters.reply & CFilters.from_admin))

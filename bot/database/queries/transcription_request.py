@@ -4,7 +4,7 @@ from sqlalchemy import func
 from bot.database.models.transcription_request import TranscriptionRequest
 
 
-def estimated_duration(session: Session, audio_length: int, threshold: int = 20):
+def estimated_duration(session: Session, audio_length: int, threshold: int = 20, round_result_by: [False, int] = 1):
     threshold_boundary = threshold / 2
     threshold_boundary_down = audio_length - threshold_boundary
     threshold_boundary_up = audio_length + threshold_boundary
@@ -15,4 +15,10 @@ def estimated_duration(session: Session, audio_length: int, threshold: int = 20)
         .one_or_none()
     )
 
-    return result.seconds
+    if result is None:
+        return result
+
+    if round_result_by:
+        return round(result.seconds, round_result_by)
+    else:
+        return result.seconds
