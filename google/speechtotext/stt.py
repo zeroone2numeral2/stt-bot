@@ -56,6 +56,7 @@ class VoiceMessage:
         self.file_name = file_name
         self.file_path = os.path.join(download_dir, self.file_name)
         self.duration = duration
+        self.audio_encoding = RecognitionConfig.AudioEncoding.OGG_OPUS
         self.short = True
         self.sample_rate = None
         self.forced_sample_rate = force_sample_rate
@@ -242,7 +243,7 @@ class VoiceMessage:
 
         # noinspection PyTypeChecker
         self.recognition_config = RecognitionConfig(
-            encoding=RecognitionConfig.AudioEncoding.OGG_OPUS,
+            encoding=self.audio_encoding,
             sample_rate_hertz=self.forced_sample_rate if self.forced_sample_rate else self.sample_rate,
             language_code=self.LANGUAGE,
             enable_automatic_punctuation=punctuation,
