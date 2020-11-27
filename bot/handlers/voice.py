@@ -154,7 +154,6 @@ def on_voice_message_private_chat_forwarded(update: Update, _, session: Session,
         )
 
 
-@decorators.action(ChatAction.TYPING)
 @decorators.catchexceptions()
 @decorators.pass_session(pass_user=True, pass_chat=True)
 def on_voice_message_group_chat(update: Update, _, session: Session, user: User, chat: Chat, *args, **kwargs):
@@ -176,6 +175,8 @@ def on_voice_message_group_chat(update: Update, _, session: Session, user: User,
         if not user or not user.tos_accepted:
             logger.info("forwarded message: no user in db, or user did not accept tos: ignoring voice message")
             return
+
+    update.message.chat.send_chat_action(ChatAction.TYPING)
 
     if update.message.voice.file_size and update.message.voice.file_size > config.telegram.voice_max_size:
         logger.info("voice message is too large (%d bytes)", update.message.voice.file_size)
