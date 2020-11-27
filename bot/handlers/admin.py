@@ -18,6 +18,7 @@ from bot.database.models.transcription_request import TranscriptionRequest
 from bot.database.queries import transcription_request
 from bot.database.queries import user as quser
 from bot.decorators import decorators
+from bot.utilities import helpers
 from bot.utilities import utilities
 from config import config
 
@@ -267,6 +268,24 @@ def on_parse_command(update: Update, context: CallbackContext, session: Session)
     )
 
 
+@decorators.catchexceptions(force_message_on_exception=True)
+@decorators.pass_session(pass_chat=True)
+def on_testignore_command(update: Update, context: CallbackContext, session: Session, chat: Chat, *args, **kwargs):
+    logger.info("/testignore command, args: %s", context.args)
+
+    user_id_override = update.message.reply_to_message.from_user.id
+    user = session.query(User).filter(User.user_id == user_id_override).one_or_none()
+    if not user:
+        user = User(user_id=user_id_override)
+        session.add(user)
+
+    ignore, reason = helpers.ignore_message_group(session, user, chat, update.message.reply_to_message)
+    update.message.reply_html(
+        f"<b>{'Ignore' if ignore else 'Ok'}</b> > {reason}",
+        quote=True
+    )
+
+
 sttbot.add_handler(CommandHandler("ignoretos", on_ignoretos_command, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_group, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_private, filters=Filters.private & CFilters.from_admin))
@@ -275,3 +294,4 @@ sttbot.add_handler(MessageHandler(Filters.private & Filters.forwarded & CFilters
 sttbot.add_handler(CommandHandler("cleandl", on_cleandl_command, filters=Filters.private & CFilters.from_admin))
 sttbot.add_handler(CommandHandler("r", on_r_command, filters=Filters.reply & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["parse", "p"], on_parse_command, filters=Filters.reply & CFilters.from_admin))
+sttbot.add_handler(CommandHandler(["testignore"], on_testignore_command, filters=Filters.group & Filters.reply & CFilters.from_admin))
