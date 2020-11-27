@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+from pprint import pformat
 
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect
@@ -8,7 +9,7 @@ from sqlalchemy import inspect
 from telegram.ext import MessageHandler, Filters, CommandHandler, CallbackContext
 # noinspection PyPackageRequirements
 from telegram import ChatAction, Update, User as TelegramUser, Message, ParseMode
-import pymediainfo
+from pymediainfo import MediaInfo
 
 from bot import sttbot
 from bot.custom_filters import CFilters
@@ -288,6 +289,32 @@ def on_testignore_command(update: Update, context: CallbackContext, session: Ses
     )
 
 
+@decorators.catchexceptions(force_message_on_exception=True)
+@decorators.pass_session()
+def on_mediainfo_command(update: Update, context: CallbackContext, session: Session):
+    logger.info("/mediainfo command, args: %s", context.args)
+
+    if not update.message.reply_to_message.voice:
+        update.message.reply_html("Rispondi ad un messaggio vocale", quote=True)
+        return
+
+    if not MediaInfo.can_parse():
+        logger.info("libmediainfo not found")
+        update.message.reply_html("libmediainfo non trovata", quote=True)
+        return
+
+    voice = VoiceMessageLocal.from_message(update.message.reply_to_message)
+
+    media_info = MediaInfo.parse(voice.file_path).to_data()
+
+    for i, track in enumerate(media_info['tracks']):
+        track_type = track.pop("track_type")
+        text = f"<code>TRACK #{i + 1} {track_type}\n\n{utilities.escape_html(pformat(track))}</code>"
+        update.message.reply_html(text, quote=True, disable_web_page_preview=True)
+
+    voice.cleanup()
+
+
 sttbot.add_handler(CommandHandler("ignoretos", on_ignoretos_command, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_group, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_private, filters=Filters.private & CFilters.from_admin))
@@ -297,3 +324,4 @@ sttbot.add_handler(CommandHandler("cleandl", on_cleandl_command, filters=Filters
 sttbot.add_handler(CommandHandler("r", on_r_command, filters=Filters.reply & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["parse", "p"], on_parse_command, filters=Filters.reply & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["testignore", "ti"], on_testignore_command, filters=Filters.group & Filters.reply & CFilters.from_admin))
+sttbot.add_handler(CommandHandler(["mediainfo", "mi"], on_mediainfo_command, filters=Filters.reply & CFilters.from_admin))
