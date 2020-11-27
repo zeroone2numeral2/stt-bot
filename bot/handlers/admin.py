@@ -204,8 +204,10 @@ def on_r_command(update: Update, context: CallbackContext, session: Session):
     avg_response_time = transcription_request.estimated_duration(session, voice.duration)
     avg_response_time = round(avg_response_time, 1) if avg_response_time else None
 
+    voice.parse_sample_rate()  # we parse it so we can include it in the message we send
+
     message_to_edit = update.message.reply_to_message.reply_html(f"Inizio la trascrizione\n"
-                                                                 f"<code>sample rate: yet to parse\n"
+                                                                 f"<code>sample rate: {voice.sample_rate_str}\n"
                                                                  f"forced sample rate: {voice.forced_sample_rate_str}\n"
                                                                  f"expected time: {avg_response_time}</code>", quote=True)
 

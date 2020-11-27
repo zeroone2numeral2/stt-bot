@@ -173,7 +173,7 @@ class VoiceMessage:
         # self.hertz_rate = file_metadata.samplerate
         raise NotImplementedError
 
-    def _parse_sample_rate(self):
+    def parse_sample_rate(self):
         with io.open(self.file_path, "rb") as fh:
             header_data = fh.read(27)
             header = struct.unpack('<4sBBqIIiB', header_data)
@@ -217,7 +217,10 @@ class VoiceMessage:
     def recognize(self, max_alternatives: [int, None] = None, punctuation: bool = True, *args, **kwargs) -> Tuple[Union[str, None], Union[float, None]]:
         self._generate_recognition_audio()
 
-        self._parse_sample_rate()
+        if not self.sample_rate:
+            self.parse_sample_rate()
+
+        self.parse_sample_rate()
         logger.debug("file sample rate: %d (forced: %s)", self.sample_rate, self.forced_sample_rate)
 
         # noinspection PyTypeChecker
