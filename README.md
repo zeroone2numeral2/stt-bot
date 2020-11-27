@@ -14,7 +14,8 @@
 
 ### transcription logic in groups (to-do)
 
+- chat with "ignore tos" flag: transcribe _everything_
 - non-forwarded voice message: only if sender accepted tos
-- forwarded voice message from user who hid their account: always
+- forwarded voice message from user who hid their account, or bots: always
 - forwarded voice message (forwarder: superuser or admin): check original sender's tos
 - forwarded voice message (forwarder: normal user): check original sender's tos
