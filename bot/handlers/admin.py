@@ -8,6 +8,7 @@ from sqlalchemy import inspect
 from telegram.ext import MessageHandler, Filters, CommandHandler, CallbackContext
 # noinspection PyPackageRequirements
 from telegram import ChatAction, Update, User as TelegramUser, Message, ParseMode
+import pymediainfo
 
 from bot import sttbot
 from bot.custom_filters import CFilters
@@ -295,4 +296,4 @@ sttbot.add_handler(MessageHandler(Filters.private & Filters.forwarded & CFilters
 sttbot.add_handler(CommandHandler("cleandl", on_cleandl_command, filters=Filters.private & CFilters.from_admin))
 sttbot.add_handler(CommandHandler("r", on_r_command, filters=Filters.reply & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["parse", "p"], on_parse_command, filters=Filters.reply & CFilters.from_admin))
-sttbot.add_handler(CommandHandler(["testignore"], on_testignore_command, filters=Filters.group & Filters.reply & CFilters.from_admin))
+sttbot.add_handler(CommandHandler(["testignore", "ti"], on_testignore_command, filters=Filters.group & Filters.reply & CFilters.from_admin))
