@@ -253,9 +253,16 @@ def on_parse_command(update: Update, context: CallbackContext, session: Session)
     avg_response_time = transcription_request.estimated_duration(session, voice.duration) or '-'
 
     update.message.reply_html(
-        f"<code>sample rate: {voice.sample_rate_str}\n"
+        f"<code>"
+        f"[DB]\n"
         f"estimated time: {avg_response_time}\n"
-        f"header data -> {', '.join([f'{k}: {v}' for k, v in voice.parsed_header_data.items()])}</code>",
+        f"\n"
+        f"[HEADER DATA]\n"
+        f"{utilities.kv_dict_to_string(voice.parsed_header_data, return_if_empty='-')}\n"
+        f"\n"
+        f"[TG]\n"
+        f"mime type: {update.message.reply_to_message.voice.mime_type}"
+        f"</code>",
         quote=True
     )
 

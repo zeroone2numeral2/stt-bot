@@ -226,6 +226,7 @@ class VoiceMessage:
                 "version": version,
                 "channels": channels,
                 "pre_skip": pre_skip,
+                "sample_rate": sample_rate,
                 "gain": gain,
                 "mapping_type": mapping_type
             }

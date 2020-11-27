@@ -82,3 +82,10 @@ def is_service_account(user: User):
 
 def is_organic_user(user: User):
     return not (is_service_account(user) or user.is_bot)
+
+
+def kv_dict_to_string(dictionary: dict, sep: str = "\n", return_if_empty=None):
+    if not dictionary:
+        return return_if_empty
+
+    return sep.join([f"{k}: {v}" for k, v in dictionary.items()])
