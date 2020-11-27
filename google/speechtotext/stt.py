@@ -34,7 +34,6 @@ class VoiceMessage:
     # opus hertz rate should always be 48000, but for some reasons google's api sometimes work only when 16000 hertz is
     # specified. This probably depends on the device the voice message has been recorded from, although ffmpeg
     # always says the hertz rate is 48000
-    OPUS_HERTZ_RATE = [16000, 48000]
     SAMPLE_RATE_ANDROID = 16000
     SAMPLE_RATE_IOS = 48000
     SAMPLE_RATE_DESKTOP = 48000
@@ -57,7 +56,7 @@ class VoiceMessage:
         self.file_path = os.path.join(download_dir, self.file_name)
         self.duration = duration
         self.short = True
-        self.sample_rate = None  # self.OPUS_HERTZ_RATE[0]
+        self.sample_rate = None
         self.forced_sample_rate = force_sample_rate
         self.channels = None  # currently not used
         self.client: SpeechClient = speech_client
