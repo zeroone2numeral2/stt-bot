@@ -255,7 +255,7 @@ def on_parse_command(update: Update, context: CallbackContext, session: Session)
     update.message.reply_html(
         f"<code>sample rate: {voice.sample_rate_str}\n"
         f"estimated time: {avg_response_time}\n"
-        f"channels: {voice.channels}</code>",
+        f"header data -> {', '.join([f'{k}: {v}' for k, v in voice.parsed_header_data.items()])}</code>",
         quote=True
     )
 
@@ -267,4 +267,4 @@ sttbot.add_handler(CommandHandler(["superusers", "sus"], on_list_superusers_comm
 sttbot.add_handler(MessageHandler(Filters.private & Filters.forwarded & CFilters.from_admin, on_forwarded_message))
 sttbot.add_handler(CommandHandler("cleandl", on_cleandl_command, filters=Filters.private & CFilters.from_admin))
 sttbot.add_handler(CommandHandler("r", on_r_command, filters=Filters.reply & CFilters.from_admin))
-sttbot.add_handler(CommandHandler("parse", on_parse_command, filters=Filters.reply & CFilters.from_admin))
+sttbot.add_handler(CommandHandler(["parse", "p"], on_parse_command, filters=Filters.reply & CFilters.from_admin))
