@@ -34,6 +34,7 @@ class VoiceMessage:
     # opus hertz rate should always be 48000, but for some reasons google's api sometimes work only when 16000 hertz is
     # specified. This probably depends on the device the voice message has been recorded from, although ffmpeg
     # always says the hertz rate is 48000
+    # https://stackoverflow.com/a/39186779/13350541
     SAMPLE_RATE_ANDROID = 16000
     SAMPLE_RATE_IOS = 48000
     SAMPLE_RATE_DESKTOP = 48000
