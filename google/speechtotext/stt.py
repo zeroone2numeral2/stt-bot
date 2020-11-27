@@ -186,36 +186,42 @@ class VoiceMessage:
             # self._max_samplenum = max(self._max_samplenum, pos)
 
             if oggs != b'OggS' or version != 0:
-                raise UnsupportedFormat('not a valid ogg file')
+                raise UnsupportedFormat('not a valid ogg file (not OggS or version != 0)')
 
             segsizes = struct.unpack('B' * segments, fh.read(segments))
+
+            packet = b""  # also called "first page"
+
             total = 0
-
-            first_page = b""
-
             for segsize in segsizes:  # read all segments
                 total += segsize
                 if total < 255:  # less than 255 bytes means end of page
-                    first_page = fh.read(total)
+                    packet = fh.read(total)
                     break
 
-            packet = first_page
-
-            walker = io.BytesIO(packet)
-
+            # packet[0:8] -> first 64 bits (8 bytes)
             if packet[0:8] != b"OpusHead":
                 raise ValueError("packet must be OpusHead")
 
+            walker = io.BytesIO(packet)
+
             # https://www.videolan.org/developers/vlc/modules/codec/opus_header.c
             # https://mf4.xiph.org/jenkins/view/opus/job/opusfile-unix/ws/doc/html/structOpusHead.html
-            walker.seek(8, os.SEEK_CUR)  # jump over header name
-            (version, ch, _, sample_rate, _, _) = struct.unpack("<BBHIHB", walker.read(11))
+            walker.seek(8, os.SEEK_CUR)  # jump over header name's 8 bytes
+            # - version number (8 bits, 1 byte -> "B")
+            # - Channels C (8 bits, 1 byte -> "B")
+            # - Pre - skip (16 bits, 2 bytes -> "H")
+            # - Sampling rate (32 bits, 4 bytes -> "I")
+            # - Gain in dB (16 bits, S7 .8, 2 bytes -> "H")
+            # - Mapping type (8 bits, 1 byte -> "B")
+            # total: 11 bytes
+            (version, channels, pre_skip, sample_rate, gain, mapping_type) = struct.unpack("<BBHIHB", walker.read(11))
 
             if (version & 0xF0) != 0:
                 raise ValueError("only major version 0 supported")
 
-            self.channels = ch
-            self.sample_rate = sample_rate  # internally opus always uses 48khz
+            self.channels = channels
+            self.sample_rate = sample_rate
 
     def recognize(self, max_alternatives: [int, None] = None, punctuation: bool = True, *args, **kwargs) -> Tuple[Union[str, None], Union[float, None]]:
         self._generate_recognition_audio()
