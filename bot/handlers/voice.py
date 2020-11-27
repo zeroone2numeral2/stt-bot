@@ -80,7 +80,7 @@ def recognize_voice(
 
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
 
-    transcription = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {voice.sample_rate_str} {elapsed}\"]</b>"
+    transcription = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {elapsed}\"]</b>"
 
     if config.misc.remove_downloaded_files:
         voice.cleanup()
