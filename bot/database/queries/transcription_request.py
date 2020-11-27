@@ -15,8 +15,8 @@ def estimated_duration(session: Session, audio_length: int, threshold: int = 20,
         .one_or_none()
     )
 
-    if result is None:
-        return result
+    if result.seconds is None:
+        return None
 
     if round_result_by:
         return round(result.seconds, round_result_by)
