@@ -89,7 +89,7 @@ def recognize_voice(
 
 
 @decorators.action(ChatAction.TYPING)
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session(pass_user=True)
 @decorators.ensure_tos(send_accept_message=True)
 def on_voice_message_private_chat(update: Update, _, session: Session, *args, **kwargs):
@@ -109,7 +109,7 @@ def on_voice_message_private_chat(update: Update, _, session: Session, *args, **
         )
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.ensure_tos(send_accept_message=True)
 def on_large_voice_message_private_chat(update: Update, *args, **kwargs):
     logger.info("voice message is too large (%d bytes)", update.message.voice.file_size)
@@ -118,7 +118,7 @@ def on_large_voice_message_private_chat(update: Update, *args, **kwargs):
 
 
 @decorators.action(ChatAction.TYPING)
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session(pass_user=True, commit_on_exception=True)
 def on_voice_message_private_chat_forwarded(update: Update, _, session: Session, user: User):
     logger.info("forwarded voice message in a private chat, mime type: %s", update.message.voice.mime_type)
@@ -155,7 +155,7 @@ def on_voice_message_private_chat_forwarded(update: Update, _, session: Session,
 
 
 @decorators.action(ChatAction.TYPING)
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session(pass_user=True, pass_chat=True)
 def on_voice_message_group_chat(update: Update, _, session: Session, user: User, chat: Chat, *args, **kwargs):
     logger.info("voice message in a group chat")

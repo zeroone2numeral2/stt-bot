@@ -24,7 +24,7 @@ from config import config
 logger = logging.getLogger(__name__)
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session(pass_chat=True)
 def on_ignoretos_command(update: Update, _, session: Session, chat: Chat):
     logger.info("/ignoretos command")
@@ -92,7 +92,7 @@ def toggle_superuser(session: Session, tg_user: TelegramUser):
         return f"{user_first_name} non è più superuser"
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session()
 def on_superuser_command_group(update: Update, _, session: Session):
     logger.info("/superuser command in a group")
@@ -106,7 +106,7 @@ def on_superuser_command_group(update: Update, _, session: Session):
     update.message.reply_html(answer)
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session()
 def on_superuser_command_private(update: Update, _, session: Session):
     logger.info("/super command in private")
@@ -120,7 +120,7 @@ def on_superuser_command_private(update: Update, _, session: Session):
     update.message.reply_html(answer, quote=True)
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session()
 def on_list_superusers_command(update: Update, _, session: Session):
     logger.info("/superusers command")
@@ -134,7 +134,7 @@ def on_list_superusers_command(update: Update, _, session: Session):
     update.message.reply_text(f"Superusers: {', '.join(names)}")
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session()
 def on_forwarded_message(update: Update, _, session: Session):
     logger.info("forwarded message from admin")
@@ -165,7 +165,7 @@ def on_forwarded_message(update: Update, _, session: Session):
     update.message.reply_text("\n".join([f"{k}: {v}" for k, v in columns]))
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 def on_cleandl_command(update: Update, _):
     logger.info("/cleandl command")
 
@@ -186,7 +186,7 @@ def on_cleandl_command(update: Update, _):
     update.message.reply_html(f"Deleted {deleted_count} files")
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions(force_message_on_exception=True)
 @decorators.pass_session()
 def on_r_command(update: Update, context: CallbackContext, session: Session):
     logger.info("/r command, args: %s", context.args)

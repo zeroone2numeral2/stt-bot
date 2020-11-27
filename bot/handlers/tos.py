@@ -58,7 +58,7 @@ eliminarli non appena il processo di trascrizione viene completato
 Per revocare il tuo consenso, usa il tasto qui sotto"""
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session(pass_user=True)
 def on_tos_command(update: Update, _, session: [Session, None], user: [User, None]):
     logger.info('/tos')
@@ -69,7 +69,7 @@ def on_tos_command(update: Update, _, session: [Session, None], user: [User, Non
         update.message.reply_html(TOS_REVOKE, reply_markup=InlineKeyboard.TOS_REVOKE, disable_web_page_preview=True)
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 def on_tos_show_button(update: Update, _):
     logger.info('show tos button')
 
@@ -81,7 +81,7 @@ def on_tos_show_button(update: Update, _):
     )
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session(pass_user=True)
 def on_tos_agree_button(update: Update, _, session: [Session, None], user: [User, None]):
     logger.info('agree tos button')
@@ -96,7 +96,7 @@ def on_tos_agree_button(update: Update, _, session: [Session, None], user: [User
     )
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session(pass_user=True)
 def on_tos_revoke_button(update: Update, _, session: [Session, None], user: [User, None]):
     logger.info('revoke tos button')

@@ -74,28 +74,35 @@ def ensure_tos(send_accept_message=False, send_accept_message_after_callback=Fal
     return real_decorator
 
 
-def failwithmessage(func):
-    @wraps(func)
-    def wrapped(update: Update, context: CallbackContext, *args, **kwargs):
-        try:
-            return func(update, context, *args, **kwargs)
-        except TimedOut:
-            # what should this return when we are inside a conversation?
-            logger.error('Telegram exception: TimedOut')
-        except Exception as e:
-            logger.error('error while running handler callback: %s', str(e), exc_info=True)
+def catchexceptions(force_message_on_exception=False):
+    def real_decorator(func):
+        @wraps(func)
+        def wrapped(update: Update, context: CallbackContext, *args, **kwargs):
+            try:
+                return func(update, context, *args, **kwargs)
+            except TimedOut:
+                # what should this return when we are inside a conversation?
+                logger.error('Telegram exception: TimedOut')
+            except Exception as e:
+                logger.error('error while running handler callback: %s', str(e), exc_info=True)
 
-            if (update.effective_chat.id > 0 and not config.telegram.silence_exceptions_private) or (update.effective_chat.id < 0 and not config.telegram.silence_exceptions_group):
-                text = 'An error occurred while processing the message: <code>{}</code>'.format(utilities.escape_html(str(e)))
-                if update.callback_query:
-                    update.callback_query.message.reply_html(text, disable_web_page_preview=True)
-                else:
-                    update.message.reply_html(text, disable_web_page_preview=True)
+                config_send_exception_message = (
+                    (update.effective_chat.id > 0 and not config.telegram.silence_exceptions_private)
+                    or (update.effective_chat.id < 0 and not config.telegram.silence_exceptions_group)
+                )
+                if force_message_on_exception or config_send_exception_message:
+                    text = 'An error occurred while processing the message: <code>{}</code>'.format(utilities.escape_html(str(e)))
+                    if update.callback_query:
+                        update.callback_query.message.reply_html(text, disable_web_page_preview=True)
+                    else:
+                        update.message.reply_html(text, disable_web_page_preview=True)
 
-            # return ConversationHandler.END
-            return
+                # return ConversationHandler.END
+                return
 
-    return wrapped
+        return wrapped
+
+    return real_decorator
 
 
 def pass_session(

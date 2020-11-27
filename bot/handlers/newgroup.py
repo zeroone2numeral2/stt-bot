@@ -28,7 +28,7 @@ class NewGroup(MessageFilter):
 new_group = NewGroup()
 
 
-@decorators.failwithmessage
+@decorators.catchexceptions()
 @decorators.pass_session(pass_user=True, pass_chat=True)
 def on_new_group_chat(update: Update, _, session: Session, user: User, chat: Chat):
     logger.info("new group chat: %s", update.effective_chat.title)
