@@ -20,7 +20,8 @@ from google.cloud.speech import (
 )
 # from google.longrunning.operations_proto import Operation
 # noinspection PyPackageRequirements
-from telegram import Message
+from telegram import Message, Voice, TelegramError
+from telegram.error import BadRequest
 
 from google.clients import speech_client
 from google.clients import storage_client
@@ -69,6 +70,23 @@ class VoiceMessage:
         if self.duration > 59:
             self.short = False
 
+    @staticmethod
+    def download_voice(voice: Voice, file_path: str, retries: int = 3):
+        logger.debug("downloading voice message to %s", file_path)
+
+        while retries > 0:
+            try:
+                telegram_file = voice.get_file()
+                telegram_file.download(file_path)
+                retries = 0
+            except (BadRequest, TelegramError) as e:
+                if "temporarily unavailable" in e.message.lower():
+                    logger.warning("downloading voice %s raised error: %s", voice.file_id, e.message)
+                    time.sleep(2)
+                    retries -= 1
+                else:
+                    raise
+
     @classmethod
     def from_message(cls, message: Message, download=True, *args, **kwargs):
         if not message.voice:
@@ -87,9 +105,7 @@ class VoiceMessage:
         )
 
         if download:
-            logger.debug("downloading voice message to %s", voice.file_path)
-            telegram_file = message.voice.get_file()
-            telegram_file.download(voice.file_path)
+            cls.download_voice(message.voice, voice.file_path)
 
         return voice
 
