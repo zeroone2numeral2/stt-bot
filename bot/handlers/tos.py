@@ -42,15 +42,15 @@ Tutti i messaggi vocali trascritti da questo bot vengono inviati in forma anonim
 affinchè possano essere processati e trascritti. Il bot non fornisce a Google nessuna informazione sul mittente \
 originale di un singolo vocale da trascrivere - inoltre, \
 <a href="https://cloud.google.com/speech-to-text/docs/data-logging">in base a quanto scritto nella \
-documentazione</a>, l'API non logga nè gli audio che riceve nè le trascrizioni che genera. Tuttavia, \
-nel caso in cui ciò non fosse vero vero, sulla carta Google potrebbe utilizzare dati già in suo possesso per \
-identificare più o meno precisamente le persone fisiche la cui voce compare nei file audio.
+documentazione</a>, l'API non logga nè gli audio che riceve nè le trascrizioni che genera. Tinfoil-hat clarification: \
+nel caso in cui ciò non fosse vero, sulla carta Google potrebbe utilizzare dati già in suo possesso per \
+identificare più o meno precisamente gli individui la cui voce compare nei file audio.
 
 Utilizzando il tasto "accetta" qui sotto si conferma di aver letto e compreso questo disclaimer, e si acconsente alla \
-manipolazione dei dati così come descritto. Sarà possibile revocare il proprio consenso utilizzando il comando /tos"""
+manipolazione dei dati così come descritto. E' possibile revocare il proprio consenso utilizzando il comando /tos"""
 
 TOS_REVOKE = """<b>Termini di Servizio, TL;DR:</b>
-- il bot salva il tuo ID utente Telegram (per memorizzare il consenso al trattamento dei tuoi dati)
+- il bot salva il tuo ID utente Telegram (per memorizzare il consenso al trattamento dei tuoi dati e le tue impostazioni)
 - il bot scarica i file vocali il cui mittente ha fornito il proprio consenso al trattamento dati, per poi \
 eliminarli non appena il processo di trascrizione viene completato
 - il bot utilizza un'API di Google per la trascrizione, quindi i file audio vengono inviati in forma anonima a Goolge
