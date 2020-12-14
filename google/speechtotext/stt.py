@@ -152,6 +152,8 @@ class VoiceMessage:
                              alternative.transcript)
 
         logger.debug("confidencies: %s", confidences)
+
+        """longer way of calculatating it, but at least you go through the dict just one time
         total_weighted_confidence = 0.0
         total_num_words = 0
         for confidence, num_words in confidences.items():
@@ -159,6 +161,9 @@ class VoiceMessage:
             total_num_words += num_words
 
         average_confidence = total_weighted_confidence / total_num_words
+        """
+
+        average_confidence = sum([conf * words for conf, words in confidences.items()]) / sum(confidences.values())
 
         return transcript.strip(), round(average_confidence, 2)
 
