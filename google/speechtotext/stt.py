@@ -136,13 +136,14 @@ class VoiceMessage:
     @staticmethod
     def _refactor_response_result(response: [RecognizeResponse, LongRunningRecognizeResponse]) -> Tuple[str, float]:
         transcript = ""
-        confidences = []
+        confidences = {}  # dict: confidence -> words count
 
         result: SpeechRecognitionResult
         for i, result in enumerate(response.results):
             best_alternative: SpeechRecognitionAlternative = result.alternatives[0]
             transcript += " " + best_alternative.transcript
-            confidences.append(best_alternative.confidence)
+            # confidence based on the words count of the transcript
+            confidences[best_alternative.confidence] = len(best_alternative.transcript.split())
 
             # this part is just for debug purposes
             alternative: SpeechRecognitionAlternative
@@ -150,7 +151,14 @@ class VoiceMessage:
                 logger.debug("result #%d alt #%d [%f]: %s", i + 1, j + 1, alternative.confidence,
                              alternative.transcript)
 
-        average_confidence = sum(confidences) / len(confidences)
+        logger.debug("confidencies: %s", confidences)
+        total_weighted_confidence = 0.0
+        total_num_words = 0
+        for confidence, num_words in confidences.items():
+            total_weighted_confidence += confidence * num_words
+            total_num_words += num_words
+
+        average_confidence = total_weighted_confidence / total_num_words
 
         return transcript.strip(), round(average_confidence, 2)
 
