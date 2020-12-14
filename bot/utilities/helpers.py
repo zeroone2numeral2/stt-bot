@@ -28,11 +28,17 @@ class RecogResult:
         self.transcription: [str, None] = transcription
         self.success = False
 
-    def split_to_messages(self, sep=" ", marging_threshold=0):
+    def split_to_messages(self, sep=" ", marging_threshold=0, max_len=None):
+        if not max_len:
+            max_len = MAX_MESSAGE_LENGTH
+
+        if marging_threshold >= max_len:
+            raise ValueError("marging_threshold can not be bigger than max_len")
+
         texts = []
         candidate_text = ""
         for i, word in enumerate(self.raw_transcript.split()):
-            if len(candidate_text + sep + word) > (MAX_MESSAGE_LENGTH - marging_threshold):
+            if len(candidate_text + sep + word) > (max_len - marging_threshold):
                 texts.append(candidate_text)
                 candidate_text = word
             else:
@@ -60,7 +66,8 @@ def recognize_voice(
 
     message_to_edit = update.message.reply_html(text, disable_notification=True, quote=True)
 
-    result = RecogResult(message_to_edit)
+    result = RecogResult()
+    result.message_to_edit = message_to_edit
 
     start = datetime.datetime.now()
 
