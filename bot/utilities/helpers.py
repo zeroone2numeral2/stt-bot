@@ -1,5 +1,6 @@
 import datetime
 import logging
+import time
 from typing import Tuple, Union
 
 from sqlalchemy.orm import Session
@@ -215,5 +216,7 @@ def send_transcription(result: RecogResult) -> int:
             # save the last message we sent so we can reply to it the next cicle
             text_to_send = start_by + text + end_by.format(i + 1, total_texts)
             reply_to = reply_to.reply_html(text_to_send, disable_web_page_preview=True, quote=True)
+
+        time.sleep(1)
 
     return total_texts

@@ -133,8 +133,29 @@ class VoiceMessage:
     def _generate_recognition_audio(self):
         raise NotImplementedError("this method must be overridden")
 
+    @staticmethod
+    def _refactor_response_result(response: [RecognizeResponse, LongRunningRecognizeResponse]) -> Tuple[str, float]:
+        transcript = ""
+        confidences = []
+
+        result: SpeechRecognitionResult
+        for i, result in enumerate(response.results):
+            best_alternative: SpeechRecognitionAlternative = result.alternatives[0]
+            transcript += " " + best_alternative.transcript
+            confidences.append(best_alternative.confidence)
+
+            # this part is just for debug purposes
+            alternative: SpeechRecognitionAlternative
+            for j, alternative in enumerate(result.alternatives):
+                logger.debug("result #%d alt #%d [%f]: %s", i + 1, j + 1, alternative.confidence,
+                             alternative.transcript)
+
+        average_confidence = sum(confidences) / len(confidences)
+
+        return transcript.strip(), round(average_confidence, 2)
+
     def _recognize_short(self, timeout=360) -> Tuple[Union[str, None], Union[float, None]]:
-        logger.debug("standard operation, timeout: %d", timeout)
+        logger.debug("standard (short) operation, timeout: %d", timeout)
 
         response: RecognizeResponse = self.client.recognize(
             config=self.recognition_config,
@@ -146,10 +167,7 @@ class VoiceMessage:
             logger.warning("no response")
             return None, None
 
-        result: SpeechRecognitionResult
-        for result in response.results:
-            best_alternative: SpeechRecognitionAlternative = result.alternatives[0]
-            return best_alternative.transcript, round(best_alternative.confidence, 2)
+        return self._refactor_response_result(response)
 
     def _recognize_long(self, timeout=360) -> Tuple[Union[str, None], Union[float, None]]:
         logger.debug("long running operation, timeout: %d", timeout)
@@ -173,18 +191,7 @@ class VoiceMessage:
             logger.warning("no response")
             return None, None
 
-        transcript = ""
-        confidences = []
-
-        result: SpeechRecognitionResult
-        for result in response.results:
-            best_alternative: SpeechRecognitionAlternative = result.alternatives[0]
-            transcript += " " + best_alternative.transcript
-            confidences.append(best_alternative.confidence)
-
-        average_confidence = sum(confidences) / len(confidences)
-
-        return transcript.strip(), round(average_confidence, 2)
+        return self._refactor_response_result(response)
 
     def _read_sample_rate(self):
         # for this to work, we need this line:
