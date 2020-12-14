@@ -45,6 +45,14 @@ class RecogResult:
 
         self.generate_transcript_slices()
 
+    @property
+    def confidence_subscript(self):
+        return str(self.confidence).translate(SUBSCRIPT)
+
+    @property
+    def elapsed_subscript(self):
+        return str(self.elapsed).translate(SUBSCRIPT)
+
     def generate_transcript_slices(self, sep=" ", safe_threshold=100, max_len=None):
         """Slice the full transcript into smaller one, that fit into a message
 
@@ -152,9 +160,7 @@ def recognize_voice(
 
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
 
-    confidence_str = str(confidence).translate(SUBSCRIPT)
-    elapsed_str = str(elapsed).translate(SUBSCRIPT)
-    result.transcript = f"\"<i>{raw_transcript}</i>\" {confidence_str} {elapsed_str}"
+    result.transcript = f"\"<i>{raw_transcript}</i>\" {result.confidence_subscript} {result.elapsed_subscript}"
 
     if config.misc.remove_downloaded_files:
         voice.cleanup()
@@ -202,7 +208,7 @@ def send_transcription(result: RecogResult) -> int:
     start_by_first_message = '"<i>'
     start_by = '"<i>...'
     end_by = '...</i>" <b>[{}/{}]</b>'
-    end_by_last_message = '</i>" <b>[{i}/{tot}] [{conf} {elapsed}"]</b>'
+    end_by_last_message = '</i>" <b>[{i}/{tot}] {conf} {elapsed}"</b>'
     additional_characters = len(start_by) + len(end_by)
     result.generate_transcript_slices(safe_threshold=additional_characters, max_len=MAX_MESSAGE_LENGTH / 2)
 
@@ -232,8 +238,8 @@ def send_transcription(result: RecogResult) -> int:
             text_to_send = start_by + text + end_by_last_message.format(
                 i=i + 1,
                 tot=total_texts,
-                conf=str(result.confidence).translate(SUBSCRIPT),
-                elapsed=str(result.elapsed).translate(SUBSCRIPT)
+                conf=result.confidence_subscript,
+                elapsed=result.elapsed_subscript
             )
             reply_to.reply_html(text_to_send, disable_web_page_preview=True, quote=True)
         else:
