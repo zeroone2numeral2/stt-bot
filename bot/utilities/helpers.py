@@ -20,31 +20,49 @@ logger = logging.getLogger(__name__)
 
 
 class RecogResult:
-    def __int__(self, message_to_edit=None, raw_transcript=None, confidence=None, elapsed=None, transcription=None):
+    def __init__(self, message_to_edit=None, raw_transcript=None, confidence=None, elapsed=None, transcription=None):
         self.message_to_edit: [Message, None] = message_to_edit
         self.raw_transcript: [str, None] = raw_transcript
         self.confidence: [float, None] = confidence
         self.elapsed: [float, None] = elapsed
         self.transcription: [str, None] = transcription
         self.success = False
+        self.split_transcript = []
 
-    def split_to_messages(self, sep=" ", marging_threshold=0, max_len=None):
+    def split_into_messages(self, sep=" ", marging_threshold=0, max_len=None):
         if not max_len:
             max_len = MAX_MESSAGE_LENGTH
 
         if marging_threshold >= max_len:
             raise ValueError("marging_threshold can not be bigger than max_len")
 
-        texts = []
+        logger.debug("len: %d; max_len: %d; marging_threshold: %d", len(self.raw_transcript), max_len, marging_threshold)
+
         candidate_text = ""
-        for i, word in enumerate(self.raw_transcript.split()):
+        words_list = self.raw_transcript.split()
+        number_of_words = len(words_list)
+        for i, word in enumerate(words_list):
             if len(candidate_text + sep + word) > (max_len - marging_threshold):
-                texts.append(candidate_text)
+                logger.debug("message build at word count %d (text len: %d)", i, len(candidate_text))
+                self.split_transcript.append(candidate_text)
                 candidate_text = word
             else:
                 candidate_text += sep + word
 
-        return texts
+            if i + 1 == number_of_words:
+                # if it's the last word: append what we have built until now
+                logger.debug("last word reached: appending what's left (%d characters)", len(candidate_text))
+                self.split_transcript.append(candidate_text)
+
+        return self.split_transcript
+
+    @property
+    def full_transcription_words_count(self):
+        return len(self.raw_transcript.split())
+
+    @property
+    def split_transcriptions_words_count(self):
+        return sum([len(t.split()) for t in self.split_transcript])
 
 
 def recognize_voice(
@@ -66,8 +84,7 @@ def recognize_voice(
 
     message_to_edit = update.message.reply_html(text, disable_notification=True, quote=True)
 
-    result = RecogResult()
-    result.message_to_edit = message_to_edit
+    result = RecogResult(message_to_edit=message_to_edit)
 
     start = datetime.datetime.now()
 
@@ -157,19 +174,29 @@ def send_transcription(result: RecogResult) -> int:
         return 1
 
     # 1: build the messages to send
-    start_message_by = '<i>"'
-    end_message_by = '</i>" <b>[{}/{}]</b>'
-    end_message_by_last_message = '</i>" <b>[{i}/{tot}] [{conf} {elapsed}"]</b>'
-    additional_characters = len(start_message_by) + len(end_message_by)
-    texts = result.split_to_messages(marging_threshold=additional_characters)
+    start_by_first_message = '"<i>'
+    start_by = '"<i>...'
+    end_by = '...</i>" <b>[{}/{}]</b>'
+    end_by_last_message = '</i>" <b>[{i}/{tot}] [{conf} {elapsed}"]</b>'
+    additional_characters = len(start_by) + len(end_by)
+    texts = result.split_into_messages(marging_threshold=additional_characters, max_len=MAX_MESSAGE_LENGTH/2)
+
+    if result.full_transcription_words_count != result.split_transcriptions_words_count:
+        error_desc = "words count mismatch (full: %d, split: %d)" % (result.full_transcription_words_count, result.split_transcriptions_words_count)
+        logger.error(error_desc)
+        logger.error("transcription: %s", result.raw_transcript)
+        raise ValueError(error_desc)
 
     # 2: send the messages
     total_texts = len(texts)
+    logger.debug("log transcriptions: %d texts to send", total_texts)
     reply_to = result.message_to_edit
     for i, text in enumerate(texts):
-        text_to_send = start_message_by + text + end_message_by.format(i + 1, total_texts)
+        text = text.strip()  # remove white spaced at the beginning/end
+
         if i == 0:
             # we edit the "Transcribing voice message..." message
+            text_to_send = start_by_first_message + text + end_by.format(i + 1, total_texts)
             result.message_to_edit.edit_text(
                 text_to_send,
                 disable_web_page_preview=True,
@@ -177,7 +204,7 @@ def send_transcription(result: RecogResult) -> int:
             )
         elif i + 1 == total_texts:
             # we are sending the last message
-            text_to_send = start_message_by + text + end_message_by_last_message.format(
+            text_to_send = start_by + text + end_by_last_message.format(
                 i=i + 1,
                 tot=total_texts,
                 conf=result.confidence,
@@ -186,6 +213,7 @@ def send_transcription(result: RecogResult) -> int:
             reply_to.reply_html(text_to_send, disable_web_page_preview=True, quote=True)
         else:
             # save the last message we sent so we can reply to it the next cicle
+            text_to_send = start_by + text + end_by.format(i + 1, total_texts)
             reply_to = reply_to.reply_html(text_to_send, disable_web_page_preview=True, quote=True)
 
     return total_texts
