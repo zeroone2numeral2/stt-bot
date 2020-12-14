@@ -19,7 +19,7 @@ from config import config
 
 logger = logging.getLogger(__name__)
 
-SUBSTRING = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
+SUBSTRING = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")  # https://stackoverflow.com/a/24392215
 
 
 class RecogResult:
