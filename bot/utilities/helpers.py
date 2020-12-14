@@ -19,7 +19,7 @@ from config import config
 
 logger = logging.getLogger(__name__)
 
-SUBSTRING = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")  # https://stackoverflow.com/a/24392215
+SUBSCRIPT = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")  # https://stackoverflow.com/a/24392215
 
 
 class RecogResult:
@@ -152,8 +152,8 @@ def recognize_voice(
 
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
 
-    confidence_str = str(confidence).translate(SUBSTRING)
-    elapsed_str = str(elapsed).translate(SUBSTRING)
+    confidence_str = str(confidence).translate(SUBSCRIPT)
+    elapsed_str = str(elapsed).translate(SUBSCRIPT)
     result.transcript = f"\"<i>{raw_transcript}</i>\" {confidence_str} {elapsed_str}"
 
     if config.misc.remove_downloaded_files:
@@ -232,8 +232,8 @@ def send_transcription(result: RecogResult) -> int:
             text_to_send = start_by + text + end_by_last_message.format(
                 i=i + 1,
                 tot=total_texts,
-                conf=str(result.confidence).translate(SUBSTRING),
-                elapsed=str(result.elapsed).translate(SUBSTRING)
+                conf=str(result.confidence).translate(SUBSCRIPT),
+                elapsed=str(result.elapsed).translate(SUBSCRIPT)
             )
             reply_to.reply_html(text_to_send, disable_web_page_preview=True, quote=True)
         else:
