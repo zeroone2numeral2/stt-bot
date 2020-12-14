@@ -31,16 +31,12 @@ def on_voice_message_private_chat(update: Update, _, session: Session, *args, **
 
     voice = VoiceMessageLocal.from_message(update.message)
 
-    message_to_edit, transcription = helpers.recognize_voice(voice, update, session)
+    result: helpers.RecogResult = helpers.recognize_voice(voice, update, session)
 
-    if not transcription:
-        message_to_edit.edit_text("<i>Impossibile trascrivere messaggio vocale</i>", parse_mode=ParseMode.HTML)
+    if not result.transcription:
+        result.message_to_edit.edit_text("<i>Impossibile trascrivere messaggio vocale</i>", parse_mode=ParseMode.HTML)
     else:
-        message_to_edit.edit_text(
-            transcription,
-            disable_web_page_preview=True,
-            parse_mode=ParseMode.HTML
-        )
+        helpers.send_transcription(result)
 
 
 @decorators.catchexceptions()
@@ -76,16 +72,12 @@ def on_voice_message_private_chat_forwarded(update: Update, _, session: Session,
 
     voice = VoiceMessageLocal.from_message(update.message)
 
-    message_to_edit, transcription = helpers.recognize_voice(voice, update, session)
+    result: helpers.RecogResult = helpers.recognize_voice(voice, update, session)
 
-    if not transcription:
-        message_to_edit.edit_text("<i>Impossibile trascrivere messaggio vocale</i>", parse_mode=ParseMode.HTML)
+    if not result.transcription:
+        result.message_to_edit.edit_text("<i>Impossibile trascrivere messaggio vocale</i>", parse_mode=ParseMode.HTML)
     else:
-        message_to_edit.edit_text(
-            transcription,
-            disable_web_page_preview=True,
-            parse_mode=ParseMode.HTML
-        )
+        helpers.send_transcription(result)
 
 
 @decorators.catchexceptions()
@@ -106,16 +98,12 @@ def on_voice_message_group_chat(update: Update, _, session: Session, user: User,
 
     voice = VoiceMessageLocal.from_message(update.message, download=True)
 
-    message_to_edit, transcription = helpers.recognize_voice(voice, update, session, punctuation=chat.punctuation)
+    result: helpers.RecogResult = helpers.recognize_voice(voice, update, session, punctuation=chat.punctuation)
 
-    if not transcription:
-        message_to_edit.delete()
+    if not result.transcription:
+        result.message_to_edit.delete()
     else:
-        message_to_edit.edit_text(
-            transcription,
-            disable_web_page_preview=True,
-            parse_mode=ParseMode.HTML
-        )
+        helpers.send_transcription(result)
 
 
 sttbot.add_handler(MessageHandler(
