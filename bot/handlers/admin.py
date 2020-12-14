@@ -265,7 +265,7 @@ def on_parse_command(update: Update, context: CallbackContext, session: Session)
         f"\n"
         f"[TG]\n"
         f"size: {utilities.human_readable_size(update.message.reply_to_message.voice.file_size)}\n"
-        f"duration: {utilities.human_readable_size(update.message.reply_to_message.voice.duration)}\n"
+        f"duration: {update.message.reply_to_message.voice.duration}\"\n"
         f"mime type: {update.message.reply_to_message.voice.mime_type}"
         f"</code>",
         quote=True
