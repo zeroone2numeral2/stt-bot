@@ -160,7 +160,7 @@ class VoiceMessage:
 
         logger.debug("confidencies: %s", confidences)
 
-        """longer way of calculatating it, but at least you go through the dict just one time
+        """longer way of calculatating it, but at least you go through the dict just once
         total_weighted_confidence = 0.0
         total_num_words = 0
         for confidence, num_words in confidences.items():
