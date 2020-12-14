@@ -136,7 +136,7 @@ class VoiceMessage:
     @staticmethod
     def _refactor_response_result(response: [RecognizeResponse, LongRunningRecognizeResponse]) -> Tuple[str, float]:
         transcript = ""
-        confidences = {}  # dict: confidence -> words count
+        confidences = {}  # {confidence: words count}
 
         result: SpeechRecognitionResult
         for i, result in enumerate(response.results):
