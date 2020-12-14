@@ -26,6 +26,19 @@ class RecogResult:
         self.confidence: [float, None] = confidence
         self.elapsed: [float, None] = elapsed
         self.transcription: [str, None] = transcription
+        self.success = False
+
+    def split_to_messages(self, sep=" ", marging_threshold=0):
+        texts = []
+        candidate_text = ""
+        for i, word in enumerate(self.raw_transcript.split()):
+            if len(candidate_text + sep + word) > (MAX_MESSAGE_LENGTH - marging_threshold):
+                texts.append(candidate_text)
+                candidate_text = word
+            else:
+                candidate_text += sep + word
+
+        return texts
 
 
 def recognize_voice(
@@ -55,20 +68,21 @@ def recognize_voice(
 
     try:
         raw_transcript, confidence = voice.recognize(punctuation=punctuation)
+        result.success = True
     except UnsupportedFormat:
         logger.error("unsupported format while transcribing voice %s", voice.file_path)
         if not config.misc.keep_files_on_error:
             voice.cleanup()
 
-        # return result
-        return message_to_edit, None
+        return result
+        # return message_to_edit, None
     except Exception as e:
         logger.error("unknown exception while transcribing voice %s: ", voice.file_path, str(e))
         if not config.misc.keep_files_on_error:
             voice.cleanup()
 
-        # return result
-        return message_to_edit, None
+        return result
+        # return message_to_edit, None
 
     result.raw_transcript = raw_transcript
     result.confidence = confidence
@@ -82,8 +96,8 @@ def recognize_voice(
         if not config.misc.keep_files_on_error:
             voice.cleanup()
 
-        # return result
-        return message_to_edit, None
+        return result
+        # return message_to_edit, None
 
     request.successful(elapsed, sample_rate=voice.sample_rate)
     session.add(request)  # add the request instance to the session only on success
@@ -96,8 +110,8 @@ def recognize_voice(
     if config.misc.remove_downloaded_files:
         voice.cleanup()
 
-    # return result
-    return message_to_edit, transcription
+    return result
+    # return message_to_edit, transcription
 
 
 def ignore_message_group(
@@ -136,17 +150,11 @@ def send_transcription(result: RecogResult) -> int:
         return 1
 
     # 1: build the messages to send
-    texts = []
-    candidate_text = ''
     start_message_by = '<i>"'
     end_message_by = '</i>" <b>[{}/{}]</b>'
+    end_message_by_last_message = '</i>" <b>[{i}/{tot}] [{conf} {elapsed}"]</b>'
     additional_characters = len(start_message_by) + len(end_message_by)
-    for i, word in enumerate(result.raw_transcript.split()):
-        if len(candidate_text + " " + word) > (MAX_MESSAGE_LENGTH - additional_characters):
-            texts.append(candidate_text)
-            candidate_text = ""
-        else:
-            candidate_text += " " + word
+    texts = result.split_to_messages(marging_threshold=additional_characters)
 
     # 2: send the messages
     total_texts = len(texts)
@@ -162,7 +170,7 @@ def send_transcription(result: RecogResult) -> int:
             )
         elif i + 1 == total_texts:
             # we are sending the last message
-            text_to_send = start_message_by + text + '</i>" <b>[{i}/{tot}] [{conf} {elapsed}"]</b>'.format(
+            text_to_send = start_message_by + text + end_message_by_last_message.format(
                 i=i + 1,
                 tot=total_texts,
                 conf=result.confidence,
