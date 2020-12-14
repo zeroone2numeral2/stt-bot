@@ -27,7 +27,7 @@ class RecogResult:
         self.transcript_slices = []
         self.confidence: [float, None] = confidence
         self.elapsed: [float, None] = elapsed
-        self.transcription: [str, None] = transcription
+        self.transcript: [str, None] = transcription
         self.success = False
 
         if self._raw_transcript:
@@ -130,7 +130,7 @@ def recognize_voice(
         return result
         # return message_to_edit, None
 
-    result._raw_transcript = raw_transcript
+    result.raw_transcript = raw_transcript
     result.confidence = confidence
 
     end = datetime.datetime.now()
@@ -150,8 +150,7 @@ def recognize_voice(
 
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
 
-    transcription = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {elapsed}\"]</b>"
-    result.transcription = transcription
+    result.transcript = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {elapsed}\"]</b>"
 
     if config.misc.remove_downloaded_files:
         voice.cleanup()
@@ -187,9 +186,9 @@ def ignore_message_group(
 
 
 def send_transcription(result: RecogResult) -> int:
-    if len(result.transcription) < MAX_MESSAGE_LENGTH:
+    if len(result.transcript) < MAX_MESSAGE_LENGTH:
         result.message_to_edit.edit_text(
-            result.transcription,
+            result.transcript,
             disable_web_page_preview=True,
             parse_mode=ParseMode.HTML
         )
