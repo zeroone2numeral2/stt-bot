@@ -16,7 +16,8 @@ TEXT = """<b>Alcuni suggerimenti sull'utilizzo del bot</b>
 - il primo numero in piccolo che compare dopo una trascrizione è un decimale che va da 0.00 a 1.00, \
 e rappresenta la "fiducia" nella trascrizione di Google. Il secondo, invece, è il tempo impiegato da \
 Google per restituire la trascrizione del vocale
-- il bot non trascrive i messaggi vocali inoltrati inviati originariamente da utenti che hanno fatto l'opt-out"""
+- il bot non trascrive i messaggi vocali inoltrati inviati originariamente da utenti che hanno fatto l'opt-out
+- puoi usare il comand /opt per verificare se hai fatto l'opt-out"""
 
 
 @decorators.catchexceptions()

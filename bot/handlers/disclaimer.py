@@ -121,6 +121,14 @@ def on_optin_command(update: Update, _, session: [Session, None], user: [User, N
 
 
 @decorators.catchexceptions()
+@decorators.pass_session(pass_user=True)
+def on_opt_command(update: Update, _, session: [Session, None], user: [User, None]):
+    logger.info('/opt')
+
+    update.message.reply_html("Opted-in" if not user.opted_out else "Opted-out")
+
+
+@decorators.catchexceptions()
 def on_disclaimer_show_button(update: Update, _):
     logger.info('show disclaimer button')
 
@@ -151,5 +159,6 @@ sttbot.add_handler(CommandHandler('disclaimer', on_disclaimer_command, filters=F
 sttbot.add_handler(CommandHandler('optout', on_optout_command, filters=Filters.private))
 sttbot.add_handler(CommandHandler('start', on_optout_deeplink, filters=Filters.private & Filters.regex("optout")))
 sttbot.add_handler(CommandHandler('optin', on_optin_command, filters=Filters.private))
+sttbot.add_handler(CommandHandler('opt', on_opt_command, filters=Filters.private))
 sttbot.add_handler(CallbackQueryHandler(on_disclaimer_show_button, pattern=r"disclaimer:show"))
 sttbot.add_handler(CallbackQueryHandler(on_optout_button, pattern=r"optout"))
