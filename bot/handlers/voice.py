@@ -51,22 +51,16 @@ def on_large_voice_message_private_chat(update: Update, *args, **kwargs):
 def on_voice_message_private_chat_forwarded(update: Update, _, session: Session, user: User):
     logger.info("forwarded voice message in a private chat, mime type: %s", update.message.voice.mime_type)
 
-    if not utilities.is_admin(update.effective_user) and not user.superuser:
-        if utilities.user_hidden_account(update.message):
-            logger.info("forwarded message: original sender hidden their account")
-            update.message.reply_html(TEXT_HIDDEN_SENDER)
+    is_superuser = utilities.is_admin(update.effective_user) or user.superuser
+    if is_superuser and not utilities.user_hidden_account(update.message):
+        forwarded_from_user: [User, None] = session.query(User).filter(User.user_id == update.message.forward_from.id).one_or_none()
+        if forwarded_from_user and forwarded_from_user.opted_out:
+            logger.info("forwarded message: user opted out")
+            update.message.reply_html(
+                "Mi dispiace, il mittente di questo messaggio non vuole che i suoi vocali vengano trascritti",
+                quote=True
+            )
             return
-        else:
-            user: [User, None] = session.query(User).filter(User.user_id == update.message.forward_from.id).one_or_none()
-            if not user or not user.tos_accepted:
-                logger.info("forwarded message: no user in db, or user did not accept tos")
-                update.message.reply_html(
-                    "Mi dispiace, il mittente di questo messaggio non ha acconsentito al trattamento dei suoi dati",
-                    quote=True
-                )
-                return
-    elif user.superuser:
-        logger.info("user forwards are whitelisted (superuser)")
 
     voice = VoiceMessageLocal.from_message(update.message)
 
