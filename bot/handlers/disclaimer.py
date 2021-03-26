@@ -48,7 +48,7 @@ documentazione</a>, l'API non logga nè gli audio che riceve nè le trascrizioni
 nel caso in cui ciò non fosse vero, sulla carta Google potrebbe utilizzare dati già in suo possesso per \
 identificare più o meno precisamente le persone fisiche la cui voce compare nei file audio.
 
-Ti ricordo ancora una volta che puoi utilizzare /optout (oppure il tasto qui sotto) \
+Ricordo nuovamente che puoi utilizzare /optout (oppure il tasto qui sotto) \
 se desideri che i tuoi messaggi vocali non vengano trattati"""
 
 OPTOUT_TEXT = """D'ora in avanti ignorerò i vocali che invii nei gruppi ed i tuoi vocali che altri utenti inoltrano. \
