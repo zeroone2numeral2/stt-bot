@@ -58,7 +58,7 @@ sono più restrittive del normale (ovvero <i>"i miei contatti"</i> o <i>"nessuno
 "Messaggi inoltrati"</i>) ed altri utenti al di fuori di questi due insiemi inoltrano i tuoi vocali, \
 non potrò sapere che tu sei il mittente originale del messaggio vocale - di conseguenza verrà trascritto
 
-Puoi utilizzare /optin se vuoi che smetta di ignorare i tuoi vocali"""
+Se ci ripensi, usa /optin"""
 
 OPTOUT_DEEPLINK_TEXT = """Se desideri che il bot ignori i tuoi messaggi vocali \
 (anche quando vengono inoltrati da altri utenti), usa il tasto qui sotto. \
