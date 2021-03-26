@@ -17,8 +17,11 @@ depends_on = None
 
 
 def upgrade():
-    op.alter_column("users", column_name="tos_accepted", new_column_name="opted_out")
-    op.drop_column("chats", "ignore_tos")
+    with op.batch_alter_table("users") as batch_op:
+        batch_op.alter_column(column_name="tos_accepted", new_column_name="opted_out")
+
+    with op.batch_alter_table("chats") as batch_op:
+        batch_op.drop_column("ignore_tos")
 
 
 def downgrade():
