@@ -27,22 +27,6 @@ from config import config
 logger = logging.getLogger(__name__)
 
 
-@decorators.catchexceptions()
-@decorators.pass_session(pass_chat=True)
-def on_ignoretos_command(update: Update, _, session: Session, chat: Chat):
-    logger.info("/ignoretos command")
-
-    if not chat.ignore_tos:
-        chat.ignore_tos = True
-        answer = "I messaggi vocali in questa chat verranno trascritti a prescindere dalla volontà di chi li invia"
-    else:
-        chat.ignore_tos = False
-        answer = "I messaggi vocali in questa chat verranno trascritti solo se chi li invia ha acconsentito alle " \
-                 "modalità dei trattamenti dei propri dati"
-
-    update.message.reply_html(answer)
-
-
 def detect_user_utility_private(update: Update) -> [TelegramUser, None]:
     message: Message = update.message
     replied_to_message: Message = message.reply_to_message
@@ -316,7 +300,6 @@ def on_mediainfo_command(update: Update, context: CallbackContext, session: Sess
     voice.cleanup()
 
 
-sttbot.add_handler(CommandHandler("ignoretos", on_ignoretos_command, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_group, filters=Filters.group & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_private, filters=Filters.private & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superusers", "sus"], on_list_superusers_command, filters=Filters.private & CFilters.from_admin))
