@@ -1,5 +1,5 @@
 newgroup
-disclaimer
+disclaimer # this must be placed before "start" because it has a deeplink handler
 start
 tips
 voice
