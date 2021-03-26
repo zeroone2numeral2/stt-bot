@@ -12,7 +12,7 @@ from bot.decorators import decorators
 logger = logging.getLogger(__name__)
 
 TEXT = """Hmm, non capisco cosa tu voglia dire. Inviami/inoltrami un messaggio vocale per trascriverlo, oppure usa \
-/tos per dare o revocare il tuo consenso al trattamento dei tuoi dati"""
+/start per più info"""
 
 
 @decorators.catchexceptions()
