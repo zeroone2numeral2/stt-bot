@@ -17,6 +17,7 @@ from bot import sttbot
 from bot.markups import InlineKeyboard
 from bot.database.models.user import User
 from bot.decorators import decorators
+from bot.utilities import utilities
 from config import config
 
 logger = logging.getLogger(__name__)
@@ -24,8 +25,8 @@ logger = logging.getLogger(__name__)
 DISCLAIMER_TEXT = """Questo è un disclaimer affinchè tu possa prendere \
 coscienza di come questo bot elabora, gestisce e condivide i dati necessari al suo funzionamento.
 Se lo desideri, puoi utilizzare il comando /optout per fare in modo che il bot ignori i tuoi messaggi vocali, \
-anche quando inoltrati da altri utenti. Potrai comunque continuare ad utilizzare il bot. \
-I messaggi vocali inviati in questa chat verranno comunque trascritti.
+anche quando vengono inoltrati da altri utenti. Potrai comunque continuare ad utilizzare il bot. \
+I messaggi vocali inviati da te in questa chat verranno comunque trascritti.
 
 <b>Dati identificativi dell'utente Telegram</b>
 Il bot salva l'ID univoco degli utenti telegram che lo avviano, o che incontra nelle chat di gruppo, al \
@@ -56,6 +57,13 @@ sono più restrittive del normale (ovvero <i>"i miei contatti"</i> o <i>"nessuno
 "Messaggi inoltrati"</i>) ed altri utenti al di fuori di questi due insiemi inoltrano i tuoi vocali, \
 non potrò sapere che tu sei il mittente originale del messaggio vocale - di conseguenza verrà trascritto"""
 
+OPTOUT_DEEPLINK_TEXT = """Se desideri che il bot ignori i tuoi messaggi vocali \
+(anche quando vengono inoltrati da altri utenti), usa il tasto qui sotto. \
+Potrai comunque continuare ad utilizzare il bot. \
+I messaggi vocali inviati da te in questa chat verranno comunque trascritti.
+
+Nel caso in cui cambiassi idea in futuro, puoi utilizzare il comando /optin"""
+
 OPTIN_TEXT = """Ok, non ignorerò più i tuoi vocali. Se ci ripensi, usa /optout"""
 
 
@@ -80,6 +88,17 @@ def on_optout_command(update: Update, _, session: [Session, None], user: [User, 
     update.message.reply_html(
         OPTOUT_TEXT,
         reply_markup=InlineKeyboard.DISCLAIMER_SHOW,
+        disable_web_page_preview=True
+    )
+
+
+@decorators.catchexceptions()
+def on_optout_deeplink(update: Update, _):
+    logger.info('optout deeplink')
+
+    update.message.reply_html(
+        OPTOUT_DEEPLINK_TEXT,
+        reply_markup=utilities.combine_inline_keyboards(InlineKeyboard.DISCLAIMER_SHOW, InlineKeyboard.OPTOUT),
         disable_web_page_preview=True
     )
 
@@ -127,6 +146,7 @@ def on_optout_button(update: Update, _, session: [Session, None], user: [User, N
 
 sttbot.add_handler(CommandHandler('disclaimer', on_disclaimer_command, filters=Filters.private))
 sttbot.add_handler(CommandHandler('optout', on_optout_command, filters=Filters.private))
+sttbot.add_handler(CommandHandler('start', on_optout_deeplink, filters=Filters.private & Filters.regex("optout")))
 sttbot.add_handler(CommandHandler('optin', on_optin_command, filters=Filters.private))
 sttbot.add_handler(CallbackQueryHandler(on_disclaimer_show_button, pattern=r"disclaimer:show"))
 sttbot.add_handler(CallbackQueryHandler(on_optout_button, pattern=r"optout"))

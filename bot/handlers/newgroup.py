@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from telegram.ext import MessageHandler, Filters, MessageFilter
 # noinspection PyPackageRequirements
 from telegram import ChatAction, Update, User as TelegramUser
+# noinspection PyPackageRequirements
+from telegram.utils import helpers as ptb_helpers
 
 from bot import sttbot
 from bot.database.models.chat import Chat
@@ -14,6 +16,8 @@ from bot.utilities import utilities
 from config import config
 
 logger = logging.getLogger(__name__)
+
+DEEPLINK_OPTOUT = ptb_helpers.create_deep_linked_url(sttbot.bot.username, "optout")
 
 
 class NewGroup(MessageFilter):
@@ -35,8 +39,7 @@ def on_new_group_chat(update: Update, _, session: Session, user: User, chat: Cha
 
     if utilities.is_admin(update.effective_user) or user.superuser or not config.telegram.exit_unknown_groups:
         update.message.reply_html(
-            "<i>Promemoria: trascriverò solamente i vocali di chi mi ha avviato in privato ed "
-            "ha acconsentito al trattamento dei propri dati</i>",
+            "<i>Promemoria: se non vuoi che trascriva i tuoi vocali, puoi</i> <a href=\"{}\">fare l'opt-out da qui</a>".format(DEEPLINK_OPTOUT),
             quote=False
         )
         chat.left = None

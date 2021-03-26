@@ -7,7 +7,9 @@ from pickle import UnpicklingError
 from html import escape
 
 # noinspection PyPackageRequirements
-from telegram import User, Message
+from typing import List
+
+from telegram import User, Message, InlineKeyboardMarkup
 from telegram.ext import PicklePersistence
 
 from config import config
@@ -99,3 +101,15 @@ def human_readable_size(size, precision=2):
         size = size / 1024.0  # apply the division
 
     return '%.*f %s' % (precision, size, suffixes[suffix_index])
+
+
+def combine_inline_keyboards(*inline_keyboards):
+    inline_keyboards: List[InlineKeyboardMarkup]
+
+    combined_keyboard = []
+    for keyboard in inline_keyboards:
+        for buttons_row in keyboard.inline_keyboard:
+            combined_keyboard.append(buttons_row)
+
+    return InlineKeyboardMarkup(combined_keyboard)
+
