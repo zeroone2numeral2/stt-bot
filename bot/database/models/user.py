@@ -9,7 +9,7 @@ class User(Base):
     user_id = Column(Integer, primary_key=True)
     name = Column(String, default=None, nullable=True)  # this is just for superusers
     enabled = Column(Boolean, default=True)
-    tos_accepted = Column(Boolean, default=False)
+    opted_out = Column(Boolean, default=False)
     superuser = Column(Boolean, default=False)
 
     def __init__(self, user_id):
@@ -25,8 +25,8 @@ class User(Base):
         self.superuser = False
         self.name = None
 
-    def revoke_tos(self, keep_name_if_superuser=True):
-        self.tos_accepted = False
+    def opt_out(self, keep_name_if_superuser=True):
+        self.opted_out = True
         if not self.superuser or (self.superuser and not keep_name_if_superuser):
             self.name = None
 
