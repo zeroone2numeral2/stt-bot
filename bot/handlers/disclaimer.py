@@ -51,11 +51,14 @@ identificare più o meno precisamente le persone fisiche la cui voce compare nei
 Ricordo nuovamente che puoi utilizzare /optout (oppure il tasto qui sotto) \
 se desideri che i tuoi messaggi vocali non vengano trattati"""
 
-OPTOUT_TEXT = """D'ora in avanti ignorerò i vocali che invii nei gruppi ed i tuoi vocali che altri utenti inoltrano. \
+OPTOUT_TEXT = """D'ora in avanti ignorerò i vocali che invii nei gruppi ed i tuoi vocali che altri utenti inoltrano.
+
 <b>Nota riguardo i messaggi inoltrati:</b> se le tue impostazioni della privacy sui messaggi inoltrati \
 sono più restrittive del normale (ovvero <i>"i miei contatti"</i> o <i>"nessuno"</i>, nel menu <i>"Privacy e sicurezza" -> \
 "Messaggi inoltrati"</i>) ed altri utenti al di fuori di questi due insiemi inoltrano i tuoi vocali, \
-non potrò sapere che tu sei il mittente originale del messaggio vocale - di conseguenza verrà trascritto"""
+non potrò sapere che tu sei il mittente originale del messaggio vocale - di conseguenza verrà trascritto
+
+Puoi utilizzare /optin se vuoi che smetta di ignorare i tuoi vocali"""
 
 OPTOUT_DEEPLINK_TEXT = """Se desideri che il bot ignori i tuoi messaggi vocali \
 (anche quando vengono inoltrati da altri utenti), usa il tasto qui sotto. \
