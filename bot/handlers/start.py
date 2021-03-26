@@ -28,7 +28,6 @@ Usa /tips o /help per ricevere alcuni suggerimenti sull'utilizzo del bot"""
 
 @decorators.catchexceptions()
 @decorators.pass_session(pass_user=True)
-@decorators.ensure_tos(send_accept_message=True, send_accept_message_after_callback=True)
 def on_start_command(update: Update, _, session: [Session, None], user: [User, None]):
     logger.info("/start")
 

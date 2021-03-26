@@ -31,49 +31,6 @@ def action(chat_action):
     return real_decorator
 
 
-def ensure_tos(send_accept_message=False, send_accept_message_after_callback=False):
-    """Make sure the user accepted the ToS. In group chats, if the ToS is not accepted, the funtion just returns.
-    In private chats, it may send a message.
-
-    If 'silently' is true, the bot will just add an info to the context object and continue with the callback
-    if 'dont_override_callback' is true, the bot will execute the callback and then send the ToS message. If false,
-    the bot will only send the ToS message
-
-    'silently' and 'dont_override_callback' are mutually exclusive"""
-    if send_accept_message_after_callback and not send_accept_message:
-        raise ValueError("if 'send_accept_message_after_callback' is true, 'send_accept_message' must be true too")
-
-    def real_decorator(func):
-        @wraps(func)
-        def wrapped(update: Update, context: CallbackContext, session: [Session, None] = None, user: [User, None] = None, *args, **kwargs):
-            if session is None or user is None:
-                raise ValueError("ensure_tos decorator has been called without passing it a Session or User instance")
-
-            if user.tos_accepted or not send_accept_message:
-                return func(update, context, session, user, *args, **kwargs)
-            elif send_accept_message and update.effective_chat.id > 0:
-                callback_result = None
-                if send_accept_message_after_callback:
-                    callback_result = func(update, context, session, user, *args, **kwargs)
-
-                update.message.reply_html(
-                    "Affinchè il bot possa trascrivere i tuoi messaggi vocali qui e nei gruppi, è necessario che tu "
-                    "legga l'informativa sul trattamento dei dati personali",
-                    reply_markup=InlineKeyboard.TOS_SHOW,
-                    disable_web_page_preview=True,
-                    parse_mode=ParseMode.HTML
-                )
-
-                return callback_result
-            else:
-                # tos not accepted -> do nothing in groups
-                return
-
-        return wrapped
-
-    return real_decorator
-
-
 def catchexceptions(force_message_on_exception=False):
     def real_decorator(func):
         @wraps(func)

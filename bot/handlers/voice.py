@@ -25,7 +25,6 @@ accessibile tramite i messaggi inoltrati, quindi non posso verificare che abbia 
 @decorators.action(ChatAction.TYPING)
 @decorators.catchexceptions()
 @decorators.pass_session(pass_user=True)
-@decorators.ensure_tos(send_accept_message=True)
 def on_voice_message_private_chat(update: Update, _, session: Session, *args, **kwargs):
     logger.info("voice message in a private chat, mime type: %s", update.message.voice.mime_type)
 
@@ -40,7 +39,6 @@ def on_voice_message_private_chat(update: Update, _, session: Session, *args, **
 
 
 @decorators.catchexceptions()
-@decorators.ensure_tos(send_accept_message=True)
 def on_large_voice_message_private_chat(update: Update, *args, **kwargs):
     logger.info("voice message is too large (%d bytes)", update.message.voice.file_size)
 
