@@ -146,23 +146,23 @@ def ignore_message_group(
         message: Message
 ):
     is_forward_from_user = utilities.is_forward_from_user(message)
-    if chat.ignore_tos:
-        return False, "chat is set to ignore tos"
-    elif not is_forward_from_user and not user.tos_accepted:
-        return True, "non-forwarded and sender did not accept tos"
+    if not chat.enabled:
+        return True, "chat is disabled"
+    elif not is_forward_from_user and user.opted_out:
+        return True, "non-forwarded and sender opted out"
     elif is_forward_from_user and utilities.user_hidden_account(message):
         return False, "forwarded message: original sender with hidden account"
     elif is_forward_from_user and message.forward_from.is_bot:
         return False, "forwarded message: original sender is a bot"
     elif is_forward_from_user:
         # forwarded message from an user who did not decide to hide their account
-        user: [User, None] = session.query(User).filter(User.user_id == message.forward_from.id).one_or_none()
-        if not user or not user.tos_accepted:
-            return True, "forwarded message: original sender not in db or did not accept tos"
+        forward_from_user: [User, None] = session.query(User).filter(User.user_id == message.forward_from.id).one_or_none()
+        if not forward_from_user or not forward_from_user.opted_out:
+            return False, "forwarded message: original sender not in db or did not opt out"
         else:
-            return False, "forwarded message: original sender accepted tos"
+            return True, "forwarded message: original sender opted out"
 
-    return False, "sender accepted tos"
+    return False, "chat is enabled and sender did not opt out"
 
 
 def send_transcription(result: RecogResult) -> int:
