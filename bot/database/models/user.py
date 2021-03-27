@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, Boolean, String
+from sqlalchemy.orm import relationship
 
 from ..base import Base, engine
 
@@ -11,6 +12,8 @@ class User(Base):
     enabled = Column(Boolean, default=True)
     opted_out = Column(Boolean, default=False)
     superuser = Column(Boolean, default=False)
+
+    chats_administrator = relationship("ChatAdministrator", back_populates="user")
 
     def __init__(self, user_id):
         self.user_id = user_id

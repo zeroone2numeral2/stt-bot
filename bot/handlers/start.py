@@ -35,4 +35,4 @@ def on_start_command(update: Update, _, session: [Session, None], user: [User, N
     update.message.reply_html(TEXT, disable_web_page_preview=True)
 
 
-sttbot.add_handler(CommandHandler("start", on_start_command, filters=Filters.private))
+sttbot.add_handler(CommandHandler("start", on_start_command, filters=Filters.chat_type.private))

@@ -4,13 +4,15 @@ from sqlalchemy.orm import Session
 # noinspection PyPackageRequirements
 from telegram.ext import MessageHandler, Filters, MessageFilter
 # noinspection PyPackageRequirements
-from telegram import ChatAction, Update, User as TelegramUser
+from telegram import ChatAction, Update, User as TelegramUser, ChatMember
 # noinspection PyPackageRequirements
 from telegram.utils import helpers as ptb_helpers
 
 from bot import sttbot
 from bot.database.models.chat import Chat
 from bot.database.models.user import User
+from bot.database.models.chat_administrator import ChatAdministrator
+from bot.database.queries import chat as chat_queries
 from bot.decorators import decorators
 from bot.utilities import utilities
 from config import config
@@ -37,17 +39,20 @@ new_group = NewGroup()
 def on_new_group_chat(update: Update, _, session: Session, user: User, chat: Chat):
     logger.info("new group chat: %s", update.effective_chat.title)
 
-    if utilities.is_admin(update.effective_user) or user.superuser or not config.telegram.exit_unknown_groups:
-        update.message.reply_html(
-            "<i>Promemoria: se non vuoi che trascriva i tuoi vocali, puoi</i> <a href=\"{}\">fare l'opt-out da qui</a>".format(DEEPLINK_OPTOUT),
-            quote=False
-        )
-        chat.left = None
+    if config.telegram.exit_unknown_groups and not (utilities.is_admin(update.effective_user) or user.superuser):
+        logger.info("unauthorized: leaving...")
+        update.effective_chat.leave()
+        chat.left = True
         return
 
-    logger.info("unauthorized: leaving...")
-    update.effective_chat.leave()
-    chat.left = True
+    update.message.reply_html(
+        "<i>Promemoria: se non vuoi che trascriva i tuoi vocali, puoi fare l'opt-out</i> <a href=\"{}\">da qui</a>".format(DEEPLINK_OPTOUT),
+        quote=False
+    )
+    chat.left = None
+
+    administrators: [ChatMember] = update.effective_chat.get_administrators()
+    chat_queries.save_chat_administrators(session, chat, administrators)
 
 
 sttbot.add_handler(MessageHandler(new_group, on_new_group_chat))

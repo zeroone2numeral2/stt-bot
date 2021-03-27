@@ -22,4 +22,4 @@ def on_unknown_message(update: Update, _):
     update.message.reply_html(TEXT, disable_web_page_preview=True)
 
 
-sttbot.add_handler(MessageHandler(Filters.private & ~CFilters.from_admin, on_unknown_message))
+sttbot.add_handler(MessageHandler(Filters.chat_type.private & ~CFilters.from_admin, on_unknown_message))
