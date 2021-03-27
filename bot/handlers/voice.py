@@ -32,7 +32,7 @@ def on_voice_message_private_chat(update: Update, _, session: Session, *args, **
 
     result: helpers.RecogResult = helpers.recognize_voice(voice, update, session)
 
-    if not result.transcription:
+    if not result.success:
         result.message_to_edit.edit_text("<i>Impossibile trascrivere messaggio vocale</i>", parse_mode=ParseMode.HTML)
     else:
         helpers.send_transcription(result)
@@ -66,7 +66,7 @@ def on_voice_message_private_chat_forwarded(update: Update, _, session: Session,
 
     result: helpers.RecogResult = helpers.recognize_voice(voice, update, session)
 
-    if not result.transcription:
+    if not result.success:
         result.message_to_edit.edit_text("<i>Impossibile trascrivere messaggio vocale</i>", parse_mode=ParseMode.HTML)
     else:
         helpers.send_transcription(result)
@@ -92,7 +92,7 @@ def on_voice_message_group_chat(update: Update, _, session: Session, user: User,
 
     result: helpers.RecogResult = helpers.recognize_voice(voice, update, session, punctuation=chat.punctuation)
 
-    if not result.transcription:
+    if not result.success:
         result.message_to_edit.delete()
     else:
         helpers.send_transcription(result)

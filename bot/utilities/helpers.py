@@ -19,33 +19,64 @@ from config import config
 
 logger = logging.getLogger(__name__)
 
+SUBSCRIPT = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")  # https://stackoverflow.com/a/24392215
+
 
 class RecogResult:
     def __init__(self, message_to_edit=None, raw_transcript=None, confidence=None, elapsed=None, transcription=None):
         self.message_to_edit: [Message, None] = message_to_edit
-        self.raw_transcript: [str, None] = raw_transcript
+        self._raw_transcript: [str, None] = raw_transcript
+        self.transcript_slices = []
         self.confidence: [float, None] = confidence
         self.elapsed: [float, None] = elapsed
-        self.transcription: [str, None] = transcription
+        self.transcript: [str, None] = transcription
         self.success = False
-        self.split_transcript = []
 
-    def split_into_messages(self, sep=" ", marging_threshold=0, max_len=None):
+        if self._raw_transcript:
+            self.generate_transcript_slices()
+
+    @property
+    def raw_transcript(self):
+        return self._raw_transcript
+
+    @raw_transcript.setter
+    def raw_transcript(self, value: str):
+        self._raw_transcript = value
+
+        self.generate_transcript_slices()
+
+    @property
+    def confidence_subscript(self):
+        return str(self.confidence).translate(SUBSCRIPT)
+
+    @property
+    def elapsed_subscript(self):
+        return str(self.elapsed).translate(SUBSCRIPT)
+
+    def generate_transcript_slices(self, sep=" ", safe_threshold=100, max_len=None):
+        """Slice the full transcript into smaller one, that fit into a message
+
+        :param sep: what to use to separate words
+        :param safe_threshold: how many characters we should keep for markdown tags and other characters sent with the transcription
+        :param max_len: what should be the max allowed length of a text message
+        :return:
+        """
+
         if not max_len:
             max_len = MAX_MESSAGE_LENGTH
 
-        if marging_threshold >= max_len:
+        if safe_threshold >= max_len:
             raise ValueError("marging_threshold can not be bigger than max_len")
 
-        logger.debug("len: %d; max_len: %d; marging_threshold: %d", len(self.raw_transcript), max_len, marging_threshold)
+        logger.debug("len: %d; max_len: %d; marging_threshold: %d", len(self._raw_transcript), max_len, safe_threshold)
 
         candidate_text = ""
-        words_list = self.raw_transcript.split()
+        words_list = self._raw_transcript.split()
         number_of_words = len(words_list)
         for i, word in enumerate(words_list):
-            if len(candidate_text + sep + word) > (max_len - marging_threshold):
+            if len(candidate_text + sep + word) > (max_len - safe_threshold):
                 logger.debug("message build at word count %d (text len: %d)", i, len(candidate_text))
-                self.split_transcript.append(candidate_text)
+                self.transcript_slices.append(candidate_text)
                 candidate_text = word
             else:
                 candidate_text += sep + word
@@ -53,17 +84,17 @@ class RecogResult:
             if i + 1 == number_of_words:
                 # if it's the last word: append what we have built until now
                 logger.debug("last word reached: appending what's left (%d characters)", len(candidate_text))
-                self.split_transcript.append(candidate_text)
+                self.transcript_slices.append(candidate_text)
 
-        return self.split_transcript
+        return self.transcript_slices
 
     @property
     def full_transcription_words_count(self):
-        return len(self.raw_transcript.split())
+        return len(self._raw_transcript.split())
 
     @property
-    def split_transcriptions_words_count(self):
-        return sum([len(t.split()) for t in self.split_transcript])
+    def transcription_slices_words_count(self):
+        return sum([len(t.split()) for t in self.transcript_slices])
 
 
 def recognize_voice(
@@ -129,8 +160,7 @@ def recognize_voice(
 
     # print('\n'.join([f"{round(a.confidence, 2)}: {a.transcript}" for a in result]))
 
-    transcription = f"\"<i>{raw_transcript}</i>\" <b>[{confidence} {elapsed}\"]</b>"
-    result.transcription = transcription
+    result.transcript = f"\"<i>{raw_transcript}</i>\" {result.confidence_subscript} {result.elapsed_subscript}"
 
     if config.misc.remove_downloaded_files:
         voice.cleanup()
@@ -166,9 +196,9 @@ def ignore_message_group(
 
 
 def send_transcription(result: RecogResult) -> int:
-    if len(result.transcription) < MAX_MESSAGE_LENGTH:
+    if len(result.transcript) < MAX_MESSAGE_LENGTH:
         result.message_to_edit.edit_text(
-            result.transcription,
+            result.transcript,
             disable_web_page_preview=True,
             parse_mode=ParseMode.HTML
         )
@@ -178,21 +208,21 @@ def send_transcription(result: RecogResult) -> int:
     start_by_first_message = '"<i>'
     start_by = '"<i>...'
     end_by = '...</i>" <b>[{}/{}]</b>'
-    end_by_last_message = '</i>" <b>[{i}/{tot}] [{conf} {elapsed}"]</b>'
+    end_by_last_message = '</i>" <b>[{i}/{tot}] {conf} {elapsed}"</b>'
     additional_characters = len(start_by) + len(end_by)
-    texts = result.split_into_messages(marging_threshold=additional_characters, max_len=MAX_MESSAGE_LENGTH/2)
+    result.generate_transcript_slices(safe_threshold=additional_characters, max_len=MAX_MESSAGE_LENGTH / 2)
 
-    if result.full_transcription_words_count != result.split_transcriptions_words_count:
-        error_desc = "words count mismatch (full: %d, split: %d)" % (result.full_transcription_words_count, result.split_transcriptions_words_count)
+    if result.full_transcription_words_count != result.transcription_slices_words_count:
+        error_desc = "words count mismatch (full: %d, split: %d)" % (result.full_transcription_words_count, result.transcription_slices_words_count)
         logger.error(error_desc)
         logger.error("transcription: %s", result.raw_transcript)
         raise ValueError(error_desc)
 
     # 2: send the messages
-    total_texts = len(texts)
+    total_texts = len(result.transcript_slices)
     logger.debug("log transcriptions: %d texts to send", total_texts)
     reply_to = result.message_to_edit
-    for i, text in enumerate(texts):
+    for i, text in enumerate(result.transcript_slices):
         text = text.strip()  # remove white spaced at the beginning/end
 
         if i == 0:
@@ -208,8 +238,8 @@ def send_transcription(result: RecogResult) -> int:
             text_to_send = start_by + text + end_by_last_message.format(
                 i=i + 1,
                 tot=total_texts,
-                conf=result.confidence,
-                elapsed=result.elapsed
+                conf=result.confidence_subscript,
+                elapsed=result.elapsed_subscript
             )
             reply_to.reply_html(text_to_send, disable_web_page_preview=True, quote=True)
         else:

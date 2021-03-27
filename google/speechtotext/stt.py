@@ -136,22 +136,31 @@ class VoiceMessage:
     @staticmethod
     def _refactor_response_result(response: [RecognizeResponse, LongRunningRecognizeResponse]) -> Tuple[str, float]:
         transcript = ""
-        confidences = {}  # dict: confidence -> words count
+        confidences = {}  # {confidence: words count}, if the transcription is returned as multiple results
+        average_confidence = None  # if the transcription is returned as one result
 
+        results_count = len(response.results)
         result: SpeechRecognitionResult
         for i, result in enumerate(response.results):
             best_alternative: SpeechRecognitionAlternative = result.alternatives[0]
             transcript += " " + best_alternative.transcript
-            # confidence based on the words count of the transcript
-            confidences[best_alternative.confidence] = len(best_alternative.transcript.split())
+
+            if results_count > 1:
+                # if there is more than one result (each one with its own confidence), we
+                # calculate the actual confidence based on the words count of the transcript result
+                confidences[best_alternative.confidence] = len(best_alternative.transcript.split())  # words count
+            else:
+                # if there is just one result, directly use the best alternative's confidence
+                average_confidence = best_alternative.confidence
 
             # this part is just for debug purposes
             alternative: SpeechRecognitionAlternative
             for j, alternative in enumerate(result.alternatives):
-                logger.debug("result #%d alt #%d [%f]: %s", i + 1, j + 1, alternative.confidence,
-                             alternative.transcript)
+                logger.debug("result #%d alt #%d [%f]: %s", i, j, alternative.confidence, alternative.transcript)
 
         logger.debug("confidencies: %s", confidences)
+
+        """longer way of calculatating it, but at least you go through the dict just once
         total_weighted_confidence = 0.0
         total_num_words = 0
         for confidence, num_words in confidences.items():
@@ -159,6 +168,11 @@ class VoiceMessage:
             total_num_words += num_words
 
         average_confidence = total_weighted_confidence / total_num_words
+        """
+
+        if not average_confidence:
+            # the request returned more than one result: we need to calculate the average confidence
+            average_confidence = sum([conf * words for conf, words in confidences.items()]) / sum(confidences.values())
 
         return transcript.strip(), round(average_confidence, 2)
 
