@@ -6,6 +6,7 @@ class InlineKeyboard:
     HIDE = None
     REMOVE = None
 
-    TOS_SHOW = InlineKeyboardMarkup([[InlineKeyboardButton('leggi disclaimer', callback_data='tos:show')]])
-    TOS_AGREE = InlineKeyboardMarkup([[InlineKeyboardButton('accetta', callback_data='tos:agree')]])
-    TOS_REVOKE = InlineKeyboardMarkup([[InlineKeyboardButton('revoca il consenso', callback_data='tos:revoke')]])
+    DISCLAIMER_SHOW = InlineKeyboardMarkup([[InlineKeyboardButton('leggi disclaimer sui dati trattati', callback_data='disclaimer:show')]])
+    DISCLAIMER_HIDE = InlineKeyboardMarkup([[InlineKeyboardButton('riduci', callback_data='disclaimer:hide')]])
+    OPTOUT = InlineKeyboardMarkup([[InlineKeyboardButton('richiedi opt-out', callback_data='optout')]])
+    OPTIN = InlineKeyboardMarkup([[InlineKeyboardButton('richiedi opt-in', callback_data='optin')]])
