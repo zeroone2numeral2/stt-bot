@@ -25,7 +25,7 @@ def main():
     utilities.load_logging_config('logging.json')
 
     sttbot.import_handlers(r'bot/handlers/')
-    sttbot.run(clean=True, show_commands=config.telegram.show_commands)
+    sttbot.run(drop_pending_updates=True, show_commands=config.telegram.show_commands)
 
 
 if __name__ == '__main__':

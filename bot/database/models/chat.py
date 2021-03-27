@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, Boolean, String
+from sqlalchemy import Column, Integer, Boolean, String, DateTime
+from sqlalchemy.orm import relationship
 
 from ..base import Base, engine
 
@@ -13,6 +14,9 @@ class Chat(Base):
     ignore_if_shorter_than = Column(Integer, default=None)
     ignore_if_longer_than = Column(Integer, default=None)
     left = Column(Boolean, default=None)
+    # last_administrators_fetch = Column(DateTime(timezone=True), default=None, nullable=True)
+
+    chat_administrators = relationship("ChatAdministrator", back_populates="chat", cascade="all, delete, delete-orphan, save-update")
 
     def __init__(self, chat_id):
         self.chat_id = chat_id
