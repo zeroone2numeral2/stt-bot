@@ -35,6 +35,9 @@ class ChatAdministrator(Base):
         self.chat_id = chat_id
         self.user_id = chat_member.user.id
 
+        self.update_permissions(chat_member)
+
+    def update_permissions(self, chat_member: ChatMember):
         is_creator = chat_member.status == "creator"
 
         self.status = chat_member.status
