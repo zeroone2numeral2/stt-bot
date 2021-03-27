@@ -155,10 +155,10 @@ def on_optout_button(update: Update, _, session: [Session, None], user: [User, N
     )
 
 
-sttbot.add_handler(CommandHandler('disclaimer', on_disclaimer_command, filters=Filters.private))
-sttbot.add_handler(CommandHandler('optout', on_optout_command, filters=Filters.private))
-sttbot.add_handler(CommandHandler('start', on_optout_deeplink, filters=Filters.private & Filters.regex("optout")))
-sttbot.add_handler(CommandHandler('optin', on_optin_command, filters=Filters.private))
-sttbot.add_handler(CommandHandler('opt', on_opt_command, filters=Filters.private))
+sttbot.add_handler(CommandHandler('disclaimer', on_disclaimer_command, filters=Filters.chat_type.private))
+sttbot.add_handler(CommandHandler('optout', on_optout_command, filters=Filters.chat_type.private))
+sttbot.add_handler(CommandHandler('start', on_optout_deeplink, filters=Filters.chat_type.private & Filters.regex("optout")))
+sttbot.add_handler(CommandHandler('optin', on_optin_command, filters=Filters.chat_type.private))
+sttbot.add_handler(CommandHandler('opt', on_opt_command, filters=Filters.chat_type.private))
 sttbot.add_handler(CallbackQueryHandler(on_disclaimer_show_button, pattern=r"disclaimer:show"))
 sttbot.add_handler(CallbackQueryHandler(on_optout_button, pattern=r"optout"))

@@ -27,4 +27,4 @@ def on_tips_command(update: Update, _):
     update.message.reply_html(TEXT, disable_web_page_preview=True)
 
 
-sttbot.add_handler(CommandHandler(["tips", "help"], on_tips_command, filters=Filters.private))
+sttbot.add_handler(CommandHandler(["tips", "help"], on_tips_command, filters=Filters.chat_type.private))
