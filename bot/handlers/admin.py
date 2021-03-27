@@ -303,7 +303,7 @@ def on_mediainfo_command(update: Update, context: CallbackContext, session: Sess
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_group, filters=Filters.chat_type.groups & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_private, filters=Filters.chat_type.private & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superusers", "sus"], on_list_superusers_command, filters=Filters.chat_type.private & CFilters.from_admin))
-sttbot.add_handler(MessageHandler(Filters.private & Filters.forwarded & CFilters.from_admin, on_forwarded_message))
+sttbot.add_handler(MessageHandler(Filters.chat_type.private & Filters.forwarded & CFilters.from_admin, on_forwarded_message))
 sttbot.add_handler(CommandHandler("cleandl", on_cleandl_command, filters=Filters.chat_type.private & CFilters.from_admin))
 sttbot.add_handler(CommandHandler("r", on_r_command, filters=Filters.reply & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["parse", "p"], on_parse_command, filters=Filters.reply & CFilters.from_admin))

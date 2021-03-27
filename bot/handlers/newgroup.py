@@ -12,6 +12,7 @@ from bot import sttbot
 from bot.database.models.chat import Chat
 from bot.database.models.user import User
 from bot.database.models.chat_administrator import ChatAdministrator
+from bot.database.queries import chat as chat_queries
 from bot.decorators import decorators
 from bot.utilities import utilities
 from config import config
@@ -51,13 +52,7 @@ def on_new_group_chat(update: Update, _, session: Session, user: User, chat: Cha
     chat.left = None
 
     administrators: [ChatMember] = update.effective_chat.get_administrators()
-    chat_administrators = []
-    for chat_member in administrators:
-        chat_administrator = ChatAdministrator(update.effective_chat.id, chat_member)
-        chat_administrators.append(chat_administrator)
-
-    chat.chat_administrators = chat_administrators
-    session.add(chat)  # https://docs.sqlalchemy.org/en/13/orm/cascades.html#save-update
+    chat_queries.save_chat_administrators(session, chat, administrators)
 
 
 sttbot.add_handler(MessageHandler(new_group, on_new_group_chat))
