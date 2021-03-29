@@ -9,8 +9,9 @@ from bot.database.models.chat import Chat
 from bot.database.models.chat_administrator import ChatAdministrator, chat_members_to_dict
 
 
-def save_chat_administrators(session: Session, chat: Chat, administrators: List[ChatMember]):
+def save_administrators(session: Session, chat: Chat, administrators: List[ChatMember]):
     current_chat_administrators_dict = chat_members_to_dict(chat.chat_id, administrators)
+
     chat_administrators = []
     for _, chat_member_dict in current_chat_administrators_dict.items():
         chat_administrator = ChatAdministrator(**chat_member_dict)
