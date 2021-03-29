@@ -22,4 +22,5 @@ def update_administrators(session: Session, chat: Chat, administrators: List[Cha
     chat.chat_administrators = chat_administrators
     chat.last_administrators_fetch = datetime.datetime.utcnow()
 
+
     session.add(chat)  # https://docs.sqlalchemy.org/en/13/orm/cascades.html#save-update
