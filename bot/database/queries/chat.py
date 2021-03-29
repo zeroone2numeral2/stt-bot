@@ -16,7 +16,7 @@ def save_chat_administrators(session: Session, chat: Chat, administrators: List[
         chat_administrator = ChatAdministrator(**chat_member_dict)
         chat_administrators.append(chat_administrator)
 
-    # does this also removes the instances of ChatAdministrator currently not in 'current_chat_administrators_dict'?
+    # this also deletes the instances of ChatAdministrator currently not in 'current_chat_administrators_dict'
     chat.chat_administrators = chat_administrators
     chat.last_administrators_fetch = func.now()
 
