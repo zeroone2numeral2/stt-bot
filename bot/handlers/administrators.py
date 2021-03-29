@@ -25,7 +25,7 @@ def on_refresh_administrators_command(update: Update, _, session: Session, chat:
     administrators: [ChatMember] = update.effective_chat.get_administrators()
     chat_queries.update_administrators(session, chat, administrators)
 
-    update.message.reply_html("Done, {} administrators saved".format(len(chat.chat_administrators)))
+    update.message.reply_html("Fatto, {} amministratori salvati".format(len(chat.chat_administrators)))
 
 
 sttbot.add_handler(CommandHandler(["refreshadmins"], on_refresh_administrators_command, filters=Filters.chat_type.groups))
