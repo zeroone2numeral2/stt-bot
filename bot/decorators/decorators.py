@@ -154,7 +154,12 @@ def administrator(
             chat: Chat = kwargs["chat"]
             session: Session = kwargs["session"]
 
-            admins_fetch_elapsed_seconds = (datetime.datetime.utcnow() - chat.last_administrators_fetch).total_seconds()
+            if chat.last_administrators_fetch:
+                admins_fetch_elapsed_seconds = (datetime.datetime.utcnow() - chat.last_administrators_fetch).total_seconds()
+            else:
+                # if not set, force the refresh
+                admins_fetch_elapsed_seconds = (config.telegram.chat_admins_refresh * 3600) + 1
+
             if not skip_refresh and admins_fetch_elapsed_seconds > config.telegram.chat_admins_refresh * 3600:
                 logger.info("updating administrators, elapsed seconds: %d", admins_fetch_elapsed_seconds)
 
