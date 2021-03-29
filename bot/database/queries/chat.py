@@ -9,7 +9,7 @@ from bot.database.models.chat import Chat
 from bot.database.models.chat_administrator import ChatAdministrator, chat_members_to_dict
 
 
-def save_administrators(session: Session, chat: Chat, administrators: List[ChatMember]):
+def update_administrators(session: Session, chat: Chat, administrators: List[ChatMember]):
     current_chat_administrators_dict = chat_members_to_dict(chat.chat_id, administrators)
 
     chat_administrators = []

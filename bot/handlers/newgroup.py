@@ -52,7 +52,7 @@ def on_new_group_chat(update: Update, _, session: Session, user: User, chat: Cha
     chat.left = None
 
     administrators: [ChatMember] = update.effective_chat.get_administrators()
-    chat_queries.save_administrators(session, chat, administrators)
+    chat_queries.update_administrators(session, chat, administrators)
 
 
 sttbot.add_handler(MessageHandler(new_group, on_new_group_chat))
