@@ -8,6 +8,7 @@ exit_unknown_groups = true # exit groups when added by non-admin/non-whitelisted
 voice_max_size = 10000000 # 10 mb
 silence_exceptions_private = false
 silence_exceptions_group = true
+chat_admins_refresh = 4 # hours
 
 [google]
 service_account_json = ""
