@@ -20,6 +20,3 @@ class TranscriptionRequest(Base):
         self.sample_rate = sample_rate
         self.response_time = response_time
         self.success = True
-
-
-Base.metadata.create_all(engine)

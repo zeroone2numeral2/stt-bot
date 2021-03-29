@@ -68,6 +68,3 @@ class ChatAdministrator(Base):
         chat_member_dict.update({"chat_id": chat_id})
 
         return cls(**chat_member_dict)
-
-
-Base.metadata.create_all(engine)

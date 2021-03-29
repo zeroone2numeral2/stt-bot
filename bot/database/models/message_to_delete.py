@@ -22,6 +22,3 @@ class MessageToDelete(Base):
         self.message_id = message_id
         self.sender_is_self = sender_is_self
         self.delete_after = delete_after
-
-
-Base.metadata.create_all(engine)

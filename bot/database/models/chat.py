@@ -49,6 +49,3 @@ class Chat(Base):
                 return False
 
         return False
-
-
-Base.metadata.create_all(engine)

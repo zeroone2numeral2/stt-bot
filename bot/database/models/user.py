@@ -32,6 +32,3 @@ class User(Base):
         self.opted_out = True
         if not self.superuser or (self.superuser and not keep_name_if_superuser):
             self.name = None
-
-
-Base.metadata.create_all(engine)
