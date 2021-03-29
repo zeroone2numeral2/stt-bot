@@ -167,6 +167,7 @@ def administrator(
                 chat_queries.update_administrators(session, chat, administrators)
 
             if not chat.is_admin(user_id, permissions, any_permission=_any, all_permissions=_all):
+                logger.info("access to decorator-wrapped function forbidden for anauthorized user")
                 return
             else:
                 return func(update, context, *args, **kwargs)
