@@ -6,15 +6,17 @@ from sqlalchemy import func
 from telegram import ChatMember
 
 from bot.database.models.chat import Chat
-from bot.database.models.chat_administrator import ChatAdministrator
+from bot.database.models.chat_administrator import ChatAdministrator, chat_members_to_dict
 
 
 def save_chat_administrators(session: Session, chat: Chat, administrators: List[ChatMember]):
+    current_chat_administrators_dict = chat_members_to_dict(chat.chat_id, administrators)
     chat_administrators = []
-    for chat_member in administrators:
-        chat_administrator = ChatAdministrator(chat.chat_id, chat_member)
+    for _, chat_member_dict in current_chat_administrators_dict.items():
+        chat_administrator = ChatAdministrator(**chat_member_dict)
         chat_administrators.append(chat_administrator)
 
+    # does this also removes the instances of ChatAdministrator currently not in 'current_chat_administrators_dict'?
     chat.chat_administrators = chat_administrators
     chat.last_administrators_fetch = func.now()
 

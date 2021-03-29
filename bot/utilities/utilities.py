@@ -9,7 +9,7 @@ from html import escape
 # noinspection PyPackageRequirements
 from typing import List
 
-from telegram import User, Message, InlineKeyboardMarkup
+from telegram import User, Message, InlineKeyboardMarkup, ChatMember
 from telegram.ext import PicklePersistence
 
 from config import config
