@@ -119,6 +119,8 @@ class VoiceMessagesBot(Updater):
         logger.info('updating commands list (show: %s)...', show_commands)
         self.set_commands(show_commands)
 
+        logger.info("allowed updates: %s", ", ".join(kwargs["allowed_updates"] if "allowed_updates" in kwargs else "?"))
+
         logger.info('running as @%s', self.bot.username)
         self.start_polling(*args, **kwargs)
         self.idle()

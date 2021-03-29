@@ -49,3 +49,8 @@ class Chat(Base):
                 return False
 
         return False
+
+    def get_administrator(self, user_id):
+        for administrator in self.chat_administrators:
+            if administrator.user_id == user_id:
+                return administrator

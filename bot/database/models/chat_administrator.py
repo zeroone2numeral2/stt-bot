@@ -10,10 +10,10 @@ from telegram import ChatMember
 from ..base import Base, engine
 
 
-def chat_member_to_dict(chat_member: ChatMember) -> dict:
+def chat_member_to_dict(chat_member: ChatMember, chat_id: [None, int] = None) -> dict:
     is_creator = chat_member.status == "creator"
 
-    return dict(
+    chat_member_dict = dict(
         user_id=chat_member.user.id,
         status=chat_member.status,
         is_anonymous=chat_member.is_anonymous,
@@ -27,6 +27,11 @@ def chat_member_to_dict(chat_member: ChatMember) -> dict:
         can_pin_messages=chat_member.can_pin_messages or is_creator,
         can_promote_members=chat_member.can_promote_members or is_creator
     )
+
+    if chat_id:
+        chat_member_dict["chat_id"] = chat_id
+
+    return chat_member_dict
 
 
 def chat_members_to_dict(chat_id: int, chat_members: List[ChatMember]):

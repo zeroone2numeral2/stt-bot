@@ -1,3 +1,4 @@
+chat_member_updated
 newgroup
 disclaimer # this must be placed before "start" because it has a deeplink handler
 start
