@@ -160,7 +160,8 @@ def administrator(
                 # if not set, force the refresh
                 admins_fetch_elapsed_seconds = (config.telegram.chat_admins_refresh * 3600) + 1
 
-            if not skip_refresh and admins_fetch_elapsed_seconds > config.telegram.chat_admins_refresh * 3600:
+            cache_expired = admins_fetch_elapsed_seconds > config.telegram.chat_admins_refresh * 3600
+            if (not skip_refresh and cache_expired) or not chat.chat_administrators:
                 logger.info("updating administrators, elapsed seconds: %d", admins_fetch_elapsed_seconds)
 
                 administrators: [ChatMember] = update.effective_chat.get_administrators()
