@@ -31,6 +31,7 @@ def on_refresh_administrators_command(update: Update, _, session: Session, chat:
 @decorators.catchexceptions()
 @decorators.pass_session(pass_chat=True)
 @decorators.administrator()
+@decorators.ensure_args(min_number=1)
 def on_punctuation_command(update: Update, context: CallbackContext, session: Session, chat: Chat):
     logger.info("/punctuation")
 

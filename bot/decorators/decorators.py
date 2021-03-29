@@ -176,3 +176,29 @@ def administrator(
         return wrapped
 
     return real_decorator
+
+
+def ensure_args(min_number: [int, None] = None, exact_number: [int, None] = None):
+    if min_number and exact_number:
+        raise ValueError("ambiguous number of arguments to enforce")
+
+    def real_decorator(func):
+        @wraps(func)
+        def wrapped(update: Update, context: CallbackContext, *args, **kwargs):
+            if not context.args:
+                update.effective_message.reply_html("Questa azione richiede maggiori informazioni: scrivile dopo il comando")
+                return
+
+            if min_number and len(context.args) < min_number:
+                update.effective_message.reply_html("Argomenti forniti inferiori al numero richiesto (%d)", min_number)
+                return
+
+            if exact_number and len(context.args) != exact_number:
+                update.effective_message.reply_html("Argomenti forniti diversi al numero richiesto (%d)", exact_number)
+                return
+
+            return func(update, context, *args, **kwargs)
+
+        return wrapped
+
+    return real_decorator
