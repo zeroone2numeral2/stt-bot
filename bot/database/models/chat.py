@@ -20,6 +20,7 @@ class Chat(Base):
     last_administrators_fetch = Column(DateTime(timezone=True), default=None, nullable=True)
 
     chat_administrators = relationship("ChatAdministrator", back_populates="chat", cascade="all, delete, delete-orphan, save-update")
+    messages_to_delete = relationship("MessageToDelete", back_populates="chat", cascade="all, delete, delete-orphan, save-update")
 
     def __init__(self, chat_id):
         self.chat_id = chat_id
