@@ -24,5 +24,22 @@ class Chat(Base):
     def __init__(self, chat_id):
         self.chat_id = chat_id
 
+    def is_admin(self, user_id: int, permissions: [None, List]) -> bool:
+        for chat_administrator in self.chat_administrators:
+            if chat_administrator.user_id != user_id:
+                continue
+
+            if not permissions:
+                return True
+
+            for permission in permissions:
+                # return True if any of the permissions in the list are met
+                if getattr(chat_administrator, permission):
+                    return True
+
+            return False
+
+        return False
+
 
 Base.metadata.create_all(engine)
