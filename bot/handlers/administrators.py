@@ -2,7 +2,7 @@ import logging
 
 from sqlalchemy.orm import Session
 # noinspection PyPackageRequirements
-from telegram.ext import CommandHandler, Filters
+from telegram.ext import CommandHandler, Filters, CallbackContext
 # noinspection PyPackageRequirements
 from telegram import Update, ChatMember
 
@@ -28,4 +28,27 @@ def on_refresh_administrators_command(update: Update, _, session: Session, chat:
     update.message.reply_html("Fatto, {} amministratori salvati".format(len(chat.chat_administrators)))
 
 
+@decorators.catchexceptions()
+@decorators.pass_session(pass_chat=True)
+@decorators.administrator()
+def on_punctuation_command(update: Update, context: CallbackContext, session: Session, chat: Chat):
+    logger.info("/punctuation")
+
+    new_status = context.args[0].lower()
+    if new_status == "on":
+        new_status = True
+    elif new_status == "off":
+        new_status = False
+    else:
+        update.message.reply_html("Utilizzo: <code>/punctuation on</code> oppure <code>/punctuation off</code>")
+        return
+
+    chat.punctuation = new_status
+    session.add(chat)
+
+    answer = "Punteggiatura abilitata" if new_status else "Punteggiatura disabilitata"
+    update.message.reply_html(answer)
+
+
+sttbot.add_handler(CommandHandler(["punctuation", "punct"], on_punctuation_command, filters=Filters.chat_type.groups))
 sttbot.add_handler(CommandHandler(["refreshadmins"], on_refresh_administrators_command, filters=Filters.chat_type.groups))
