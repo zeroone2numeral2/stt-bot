@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @decorators.catchexceptions()
 @decorators.pass_session(pass_chat=True)
-@decorators.administrator(permissions=[AdminPermission.CAN_CHANGE_INFO], skip_refresh=True)
+@decorators.administrator(skip_refresh=True)
 def on_refresh_administrators_command(update: Update, _, session: Session, chat: Chat):
     logger.info("/refreshadmins")
 
