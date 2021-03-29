@@ -6,8 +6,7 @@ from sqlalchemy.orm import relationship
 from ..base import Base, engine
 
 
-# class MessageToDelete(Base):
-class MessageToDelete:
+class MessageToDelete(Base):
     __tablename__ = 'messages_to_delete'
 
     chat_id = Column(Integer, ForeignKey('chats.chat_id', ondelete="CASCADE"), primary_key=True)
@@ -24,4 +23,4 @@ class MessageToDelete:
         self.delete_after = delete_after
 
 
-# Base.metadata.create_all(engine)
+Base.metadata.create_all(engine)
