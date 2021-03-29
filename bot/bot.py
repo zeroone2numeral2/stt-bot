@@ -12,6 +12,17 @@ from telegram import BotCommand
 logger = logging.getLogger(__name__)
 
 
+class AdminPermission:
+    CAN_MANAGE_CHAT = "can_manage_chat"
+    CAN_MANAGE_VOICE_CHAT = "can_manage_voice_chats"
+    CAN_CHANGE_INFO = "can_change_info"
+    CAN_DELETE_MESSAGES = "can_delete_messages"
+    CAN_INVITE_USERS = "can_invite_users"
+    CAN_RESTRICT_MEMBERS = "can_restrict_members"
+    CAN_PIN_MESSAGES = "can_pin_messages"
+    CAN_PROMOTE_MEMBERS = "can_promote_members"
+
+
 class DummyJob:
     def __init__(self, name):
         self.name = name

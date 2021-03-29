@@ -3,5 +3,6 @@ disclaimer # this must be placed before "start" because it has a deeplink handle
 start
 tips
 voice
+administrators
 admin # must be the last one just before 'fallback'
 fallback # catch everything in private chats that is not catched by previews handlers

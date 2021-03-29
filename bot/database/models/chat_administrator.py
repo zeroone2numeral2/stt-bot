@@ -1,4 +1,5 @@
 import datetime
+from typing import List
 
 from sqlalchemy import ForeignKey, Column, Integer, Boolean, String, DateTime
 from sqlalchemy.orm import relationship
@@ -7,6 +8,36 @@ from sqlalchemy.sql import func
 from telegram import ChatMember
 
 from ..base import Base, engine
+
+
+def chat_member_to_dict(chat_member: ChatMember) -> dict:
+    is_creator = chat_member.status == "creator"
+
+    return dict(
+        user_id=chat_member.user.id,
+        status=chat_member.status,
+        is_anonymous=chat_member.is_anonymous,
+        is_bot=chat_member.user.is_bot,
+        can_manage_chat=chat_member.can_manage_chat or is_creator,
+        can_manage_voice_chats=chat_member.can_manage_voice_chats or is_creator,
+        can_change_info=chat_member.can_change_info or is_creator,
+        can_delete_messages=chat_member.can_delete_messages or is_creator,
+        can_invite_users=chat_member.can_invite_users or is_creator,
+        can_restrict_members=chat_member.can_restrict_members or is_creator,
+        can_pin_messages=chat_member.can_pin_messages or is_creator,
+        can_promote_members=chat_member.can_promote_members or is_creator
+    )
+
+
+def chat_members_to_dict(chat_id: int, chat_members: List[ChatMember]):
+    result = {}
+    for chat_member in chat_members:
+        chat_member_dict = chat_member_to_dict(chat_member)
+        chat_member_dict.update({"chat_id": chat_id})
+
+        result[chat_member.user.id] = chat_member_dict
+
+    return result
 
 
 class ChatAdministrator(Base):
@@ -25,32 +56,18 @@ class ChatAdministrator(Base):
     can_restrict_members = Column(Boolean, default=False)
     can_pin_messages = Column(Boolean, default=False)
     can_promote_members = Column(Boolean, default=False)
-    # updated_on = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_on = Column(DateTime(timezone=True), onupdate=func.now())  # https://stackoverflow.com/a/33532154
+    updated_on = Column(DateTime, default=datetime.datetime.utcnow)
+    # updated_on = Column(DateTime(timezone=True), onupdate=func.now())  # https://stackoverflow.com/a/33532154
 
     user = relationship("User", back_populates="chats_administrator")
     chat = relationship("Chat", back_populates="chat_administrators")
 
-    def __init__(self, chat_id, chat_member: ChatMember):
-        self.chat_id = chat_id
-        self.user_id = chat_member.user.id
+    @classmethod
+    def from_chat_member(cls, chat_id, chat_member: ChatMember):
+        chat_member_dict = chat_member_to_dict(chat_member)
+        chat_member_dict.update({"chat_id": chat_id})
 
-        self.update_permissions(chat_member)
-
-    def update_permissions(self, chat_member: ChatMember):
-        is_creator = chat_member.status == "creator"
-
-        self.status = chat_member.status
-        self.is_anonymous = chat_member.is_anonymous
-        self.is_bot = chat_member.user.is_bot
-        self.can_manage_chat = chat_member.can_manage_chat if not is_creator else True
-        self.can_manage_voice_chats = chat_member.can_manage_voice_chats if not is_creator else True
-        self.can_change_info = chat_member.can_change_info if not is_creator else True
-        self.can_delete_messages = chat_member.can_delete_messages if not is_creator else True
-        self.can_invite_users = chat_member.can_invite_users if not is_creator else True
-        self.can_restrict_members = chat_member.can_restrict_members if not is_creator else True
-        self.can_pin_messages = chat_member.can_pin_messages if not is_creator else True
-        self.can_promote_members = chat_member.can_promote_members if not is_creator else True
+        return cls(**chat_member_dict)
 
 
 Base.metadata.create_all(engine)

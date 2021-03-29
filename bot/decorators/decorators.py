@@ -1,9 +1,12 @@
+import datetime
 import logging
 from functools import wraps
+from typing import List
 
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func as sql_func
 # noinspection PyPackageRequirements
-from telegram import Update, ParseMode
+from telegram import Update, ParseMode, ChatMember
 # noinspection PyPackageRequirements
 from telegram.error import TimedOut
 # noinspection PyPackageRequirements
@@ -13,6 +16,7 @@ from bot.markups import InlineKeyboard
 from bot.database.base import get_session
 from bot.database.models.user import User
 from bot.database.models.chat import Chat
+from bot.database.queries import chat as chat_queries
 from bot.utilities import utilities
 from config import config
 
@@ -124,6 +128,43 @@ def pass_session(
             session.commit()
 
             return result
+
+        return wrapped
+
+    return real_decorator
+
+
+def administrator(
+        permissions: [None, List] = None,
+        _any: bool = True,
+        _all: bool = False,
+        skip_refresh: bool = False  # to avoid duplicate requests if we want to update the list from the handler
+):
+    def real_decorator(func):
+        @wraps(func)
+        def wrapped(update: Update, context: CallbackContext, *args, **kwargs):
+            if update.effective_chat.id > 0:
+                raise ValueError("decorator does not support private chats")
+
+            if "chat" not in kwargs or "session" not in kwargs:
+                raise ValueError("decorator must be wrapped in 'pass_session', and must receive a Chat object")
+
+            user_id = update.effective_user.id
+
+            chat: Chat = kwargs["chat"]
+            session: Session = kwargs["session"]
+
+            admins_fetch_elapsed_seconds = (datetime.datetime.utcnow() - chat.last_administrators_fetch).total_seconds()
+            if not skip_refresh and admins_fetch_elapsed_seconds > config.telegram.chat_admins_refresh * 3600:
+                logger.info("updating administrators, elapsed seconds: %d", admins_fetch_elapsed_seconds)
+
+                administrators: [ChatMember] = update.effective_chat.get_administrators()
+                chat_queries.update_administrators(session, chat, administrators)
+
+            if not chat.is_admin(user_id, permissions, any_permission=_any, all_permissions=_all):
+                return
+            else:
+                return func(update, context, *args, **kwargs)
 
         return wrapped
 
