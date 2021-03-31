@@ -36,10 +36,10 @@ class VoiceMessage:
     # specified. This probably depends on the device the voice message has been recorded from, although ffmpeg
     # always says the hertz rate is 48000
     # https://stackoverflow.com/a/39186779/13350541
-    SAMPLE_RATE_ANDROID = 16000
-    SAMPLE_RATE_IOS = 48000
-    SAMPLE_RATE_DESKTOP = 48000
-    SAMPLE_RATE_MAC = 48000
+    OPUS_SAMPLE_RATE_ANDROID = 16000
+    OPUS_SAMPLE_RATE_IOS = 48000
+    OPUS_SAMPLE_RATE_DESKTOP = 48000
+    OPUS_SAMPLE_RATE_MAC = 48000
 
     def __init__(
             self,
@@ -58,7 +58,7 @@ class VoiceMessage:
         self.file_name = file_name
         self.file_path = os.path.join(download_dir, self.file_name)
         self.duration = duration
-        self.audio_encoding = audio_encoding or RecognitionConfig.AudioEncoding.OGG_OPUS
+        self.audio_encoding = audio_encoding if audio_encoding else RecognitionConfig.AudioEncoding.OGG_OPUS
         self.short = True
         self.sample_rate = None
         self.forced_sample_rate = force_sample_rate
