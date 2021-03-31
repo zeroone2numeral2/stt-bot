@@ -281,9 +281,6 @@ class VoiceMessage:
     def recognize(self, max_alternatives: [int, None] = None, punctuation: bool = True, *args, **kwargs) -> Tuple[Union[str, None], Union[float, None]]:
         self._generate_recognition_audio()
 
-        if not self.sample_rate:
-            self.parse_sample_rate()
-
         self.parse_sample_rate()
         logger.debug("file sample rate: %d (forced: %s)", self.sample_rate, self.forced_sample_rate)
 
