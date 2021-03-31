@@ -47,7 +47,8 @@ class VoiceMessage:
             duration: int,
             download_dir='downloads',
             force_sample_rate: [int, None] = None,
-            max_alternatives: [int, None] = None
+            max_alternatives: [int, None] = None,
+            audio_encoding: [None, RecognitionConfig.AudioEncoding] = None
     ):
         if duration is None:
             raise ValueError("the voice message duration must be provided")
@@ -57,7 +58,7 @@ class VoiceMessage:
         self.file_name = file_name
         self.file_path = os.path.join(download_dir, self.file_name)
         self.duration = duration
-        self.audio_encoding = RecognitionConfig.AudioEncoding.OGG_OPUS
+        self.audio_encoding = audio_encoding or RecognitionConfig.AudioEncoding.OGG_OPUS
         self.short = True
         self.sample_rate = None
         self.forced_sample_rate = force_sample_rate
