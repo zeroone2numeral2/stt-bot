@@ -2,6 +2,7 @@ venv/
 venvout/
 .idea/
 logs/
+tfiles/
 
 *.ogg
 *.json
