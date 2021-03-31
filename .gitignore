@@ -3,6 +3,7 @@ venvout/
 .idea/
 logs/
 tfiles/
+test_transcription.py
 
 *.ogg
 *.json
