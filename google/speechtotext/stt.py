@@ -20,7 +20,7 @@ from google.cloud.speech import (
 )
 # from google.longrunning.operations_proto import Operation
 # noinspection PyPackageRequirements
-from telegram import Message, Voice, TelegramError
+from telegram import Message, Voice, TelegramError, Audio
 from telegram.error import BadRequest
 
 from google.clients import speech_client
@@ -72,7 +72,7 @@ class VoiceMessage:
             self.short = False
 
     @staticmethod
-    def download_voice(voice: Voice, file_path: str, retries: int = 3):
+    def download_voice(voice: [Voice, Audio], file_path: str, retries: int = 3):
         logger.debug("downloading voice message to %s", file_path)
 
         while retries > 0:
@@ -90,23 +90,25 @@ class VoiceMessage:
 
     @classmethod
     def from_message(cls, message: Message, download=True, *args, **kwargs):
-        if not message.voice:
-            raise AttributeError("Message object must contain a voice message")
+        if not message.voice and not message.audio:
+            raise AttributeError("Message object must contain a voice message or an audio")
 
-        if message.voice.duration is None:
-            raise ValueError("message.Voice must contain its duration")
+        telegram_voice = message.voice or message.audio
+
+        if telegram_voice.duration is None:
+            raise ValueError("message.Voice or message.Audio must contain its duration")
 
         file_name = "{}_{}.ogg".format(message.chat.id, message.message_id)
 
         voice = cls(
             file_name=file_name,
-            duration=message.voice.duration,
+            duration=telegram_voice.duration,
             *args,
             **kwargs
         )
 
         if download:
-            cls.download_voice(message.voice, voice.file_path)
+            cls.download_voice(telegram_voice, voice.file_path)
 
         return voice
 
