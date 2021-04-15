@@ -51,8 +51,8 @@ def on_large_voice_message_private_chat(update: Update, *args, **kwargs):
 def on_voice_message_private_chat_forwarded(update: Update, _, session: Session, user: User):
     logger.info("forwarded voice message in a private chat, mime type: %s", update.message.voice.mime_type)
 
-    is_superuser = utilities.is_admin(update.effective_user) or user.superuser
-    if is_superuser and not utilities.user_hidden_account(update.message):
+    # is_superuser = utilities.is_admin(update.effective_user) or user.superuser
+    if not utilities.user_hidden_account(update.message):
         forwarded_from_user: [User, None] = session.query(User).filter(User.user_id == update.message.forward_from.id).one_or_none()
         if forwarded_from_user and forwarded_from_user.opted_out:
             logger.info("forwarded message: user opted out")
