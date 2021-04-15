@@ -3,6 +3,7 @@ import json
 import logging
 import logging.config
 import pickle
+import re
 import time
 from pickle import UnpicklingError
 from html import escape
@@ -10,7 +11,7 @@ from html import escape
 # noinspection PyPackageRequirements
 from typing import List
 
-from telegram import User, Message, InlineKeyboardMarkup, ChatMember, TelegramError
+from telegram import User, Message, InlineKeyboardMarkup, ChatMember, TelegramError, Audio
 from telegram.error import BadRequest
 from telegram.ext import PicklePersistence
 
@@ -114,6 +115,16 @@ def combine_inline_keyboards(*inline_keyboards):
             combined_keyboard.append(buttons_row)
 
     return InlineKeyboardMarkup(combined_keyboard)
+
+
+def is_whatsapp_voice(audio: Audio, check_file_name=True):
+    if audio.mime_type != "audio/opus":
+        return False
+
+    if check_file_name and not re.search(r"^PTT-\d{8}-WA\d+\.opus$", audio.file_name, re.I):
+        return False
+
+    return True
 
 
 def detect_media(message: Message):
