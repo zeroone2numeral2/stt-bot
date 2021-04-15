@@ -99,17 +99,17 @@ def on_voice_message_group_chat(update: Update, _, session: Session, user: User,
 
 
 sttbot.add_handler(MessageHandler(
-    Filters.chat_type.private & Filters.voice & CFilters.voice_too_large,
+    Filters.chat_type.private & CFilters.voice & CFilters.voice_too_large,
     on_large_voice_message_private_chat
 ))
 sttbot.add_handler(MessageHandler(
-    Filters.chat_type.private & Filters.voice & ~Filters.forwarded,
+    Filters.chat_type.private & CFilters.voice & ~Filters.forwarded,
     on_voice_message_private_chat,
     run_async=True
 ))
 sttbot.add_handler(MessageHandler(
-    Filters.chat_type.private & Filters.voice & Filters.forwarded,
+    Filters.chat_type.private & CFilters.voice & Filters.forwarded,
     on_voice_message_private_chat_forwarded,
     run_async=True
 ))
-sttbot.add_handler(MessageHandler(Filters.chat_type.groups & Filters.voice, on_voice_message_group_chat, run_async=True))
+sttbot.add_handler(MessageHandler(Filters.chat_type.groups & CFilters.voice, on_voice_message_group_chat, run_async=True))
