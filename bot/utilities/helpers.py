@@ -223,10 +223,10 @@ def send_transcription(result: RecogResult) -> int:
     logger.debug("log transcriptions: %d texts to send", total_texts)
     reply_to = result.message_to_edit
     for i, text in enumerate(result.transcript_slices):
-        text = text.strip()  # remove white spaced at the beginning/end
+        text = text.strip()  # remove white space at the beginning/end
 
         if i == 0:
-            # we edit the "Transcribing voice message..." message
+            # we edit the "Transcribing voice message..." message with the first slice
             text_to_send = start_by_first_message + text + end_by.format(i + 1, total_texts)
             result.message_to_edit.edit_text(
                 text_to_send,
@@ -243,7 +243,7 @@ def send_transcription(result: RecogResult) -> int:
             )
             reply_to.reply_html(text_to_send, disable_web_page_preview=True, quote=True)
         else:
-            # save the last message we sent so we can reply to it the next cicle
+            # save the last message we sent so we can reply to it during the next loop with the next transcription slice
             text_to_send = start_by + text + end_by.format(i + 1, total_texts)
             reply_to = reply_to.reply_html(text_to_send, disable_web_page_preview=True, quote=True)
 
