@@ -26,7 +26,7 @@ accessibile tramite i messaggi inoltrati, quindi non posso verificare che abbia 
 @decorators.catchexceptions()
 @decorators.pass_session(pass_user=True)
 def on_voice_message_private_chat(update: Update, _, session: Session, *args, **kwargs):
-    logger.info("voice message in a private chat, mime type: %s", update.message.voice.mime_type)
+    logger.info("voice message in a private chat")
 
     voice = VoiceMessageLocal.from_message(update.message)
 
@@ -49,7 +49,7 @@ def on_large_voice_message_private_chat(update: Update, *args, **kwargs):
 @decorators.catchexceptions()
 @decorators.pass_session(pass_user=True, commit_on_exception=True)
 def on_voice_message_private_chat_forwarded(update: Update, _, session: Session, user: User):
-    logger.info("forwarded voice message in a private chat, mime type: %s", update.message.voice.mime_type)
+    logger.info("forwarded voice message in a private chat")
 
     # is_superuser = utilities.is_admin(update.effective_user) or user.superuser
     if not utilities.user_hidden_account(update.message):
