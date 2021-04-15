@@ -18,4 +18,4 @@ I vocali nei gruppi **non** vengono trascritti se:
 
 - la chat è disabilitata
 - il vocale non è inoltrato, ed il mittente ha richiesto l'opt-out
-- il vocale è inoltrato, ed il mittente originale non ha nascosto il proprio account e non ha richiesto l'opt-out
+- il vocale è inoltrato, ed il mittente originale non ha nascosto il proprio account e ha richiesto l'opt-out
