@@ -1,6 +1,7 @@
 import io
 import os
 import logging
+import re
 import struct
 import time
 from typing import List, Tuple, Union
@@ -98,7 +99,11 @@ class VoiceMessage:
         if telegram_voice.duration is None:
             raise ValueError("message.Voice or message.Audio must contain its duration")
 
-        file_name = "{}_{}.ogg".format(message.chat.id, message.message_id)
+        ext = "ogg"
+        if message.audio and message.audio.file_name and re.search(r".+\..+", message.audio.file_name):
+            ext = message.audio.file_name.split(".")[-1]
+
+        file_name = "{}_{}.{}".format(message.chat.id, message.message_id, ext)
 
         voice = cls(
             file_name=file_name,
