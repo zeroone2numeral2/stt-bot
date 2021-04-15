@@ -279,8 +279,8 @@ def on_testignore_command(update: Update, context: CallbackContext, session: Ses
 def on_mediainfo_command(update: Update, context: CallbackContext, session: Session):
     logger.info("/mediainfo command, args: %s", context.args)
 
-    if not update.message.reply_to_message.voice:
-        update.message.reply_html("Rispondi ad un messaggio vocale", quote=True)
+    if not update.message.reply_to_message.voice and not update.message.reply_to_message.audio:
+        update.message.reply_html("Rispondi ad un messaggio vocale/file audio", quote=True)
         return
 
     if not MediaInfo.can_parse():
@@ -288,16 +288,25 @@ def on_mediainfo_command(update: Update, context: CallbackContext, session: Sess
         update.message.reply_html("libmediainfo non trovata", quote=True)
         return
 
-    voice = VoiceMessageLocal.from_message(update.message.reply_to_message)
+    if update.message.reply_to_message.voice:
+        file_name = f"{update.message.reply_to_message.message_id}.ogg"
+    else:
+        file_name = update.message.reply_to_message.audio.file_name
 
-    media_info = MediaInfo.parse(voice.file_path).to_data()
+    file_path = os.path.join("downloads", file_name)
+    utilities.download_file(update.message.reply_to_message, file_path)
+
+    media_info = MediaInfo.parse(file_path).to_data()
 
     for i, track in enumerate(media_info['tracks']):
         track_type = track.pop("track_type")
         text = f"<code>TRACK #{i + 1} {track_type}\n\n{utilities.escape_html(pformat(track))}</code>"
         update.message.reply_html(text, quote=True, disable_web_page_preview=True)
 
-    voice.cleanup()
+    try:
+        os.remove(file_path)
+    except FileNotFoundError:
+        pass
 
 
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_group, filters=Filters.chat_type.groups & CFilters.from_admin))

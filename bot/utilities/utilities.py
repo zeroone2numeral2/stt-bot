@@ -3,13 +3,15 @@ import json
 import logging
 import logging.config
 import pickle
+import time
 from pickle import UnpicklingError
 from html import escape
 
 # noinspection PyPackageRequirements
 from typing import List
 
-from telegram import User, Message, InlineKeyboardMarkup, ChatMember
+from telegram import User, Message, InlineKeyboardMarkup, ChatMember, TelegramError
+from telegram.error import BadRequest
 from telegram.ext import PicklePersistence
 
 from config import config
@@ -113,3 +115,39 @@ def combine_inline_keyboards(*inline_keyboards):
 
     return InlineKeyboardMarkup(combined_keyboard)
 
+
+def detect_media(message: Message):
+    if message.photo:
+        return message.photo
+    elif message.video:
+        return message.video
+    elif message.document:
+        return message.document
+    elif message.voice:
+        return message.voice
+    elif message.video_note:
+        return message.video_note
+    elif message.audio:
+        return message.audio
+    elif message.sticker:
+        return message.sticker
+
+
+def download_file(message: Message, file_path, retries=5):
+    retries = retries or 1
+
+    media_object = detect_media(message)
+
+    logger.debug("downloading voice message to %s", file_path)
+    while retries > 0:
+        try:
+            telegram_file = media_object.get_file()
+            telegram_file.download(file_path)
+            retries = 0
+        except (BadRequest, TelegramError) as e:
+            if "temporarily unavailable" in e.message.lower():
+                logger.warning("downloading voice %s raised error: %s", media_object.file_id, e.message)
+                time.sleep(2)
+                retries -= 1
+            else:
+                raise
