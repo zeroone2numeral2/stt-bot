@@ -178,8 +178,8 @@ def on_cleandl_command(update: Update, _):
 def on_r_command(update: Update, context: CallbackContext, session: Session):
     logger.info("/r command, args: %s", context.args)
 
-    if not update.message.reply_to_message.voice:
-        update.message.reply_html("Rispondi ad un messaggio vocale", quote=True)
+    if not update.message.reply_to_message.voice and not update.message.reply_to_message.audio:
+        update.message.reply_html("Rispondi ad un messaggio vocale/audio", quote=True)
         return
 
     if not context.args:
