@@ -1,22 +1,22 @@
 [telegram]
 token = ""
 workers = 4
-persistence = "persistence/data.pickle" # keep empty to disable percistency of temporary data (chat_data/user_data)
-show_commands = false # show commands popup when "/" is typed
 admins = [23646077]
-exit_unknown_groups = true # exit groups when added by non-admin/non-whitelisted users
+persistence = "persistence/data.pickle" # keep empty to disable percistency of temporary data (chat_data/user_data)
+
+[behavior]
+show_commands = false # show commands popup when "/" is typed
+exit_unknown_groups = true # exit groups when added by non-admins/non-superusers
 voice_max_size = 10000000 # 10 mb
-silence_exceptions_private = false
-silence_exceptions_group = true
-chat_admins_refresh = 4 # hours
+silence_exceptions_private = false # do not send a message if an exception happens in private
+silence_exceptions_group = true # do not send a message if an exception happens in a group
+chat_admins_refresh = 4 # hours, how often a chat's administrators cache should be refreshed
+remove_downloaded_files = true # if false, downloaded voice messages will not be removed once the transcription process is completed
+keep_files_on_error = true # when 'remove_downloaded_files' is true, do not delete file that generate an exception/receive an empty response
+punctuation = false # transcribe with punctuation if chat doesn't have a value set
 
 [google]
 service_account_json = ""
-punctuation = false # transcribe with punctuation
-
-[misc]
-remove_downloaded_files = true
-keep_files_on_error = true # do not delete file that generate an exception/receive an empty response
 
 [database]
 engine_string = "sqlite:///bot.db"

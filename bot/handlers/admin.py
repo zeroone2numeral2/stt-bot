@@ -200,7 +200,7 @@ def on_r_command(update: Update, context: CallbackContext, session: Session):
     request = TranscriptionRequest(audio_duration=voice.duration)
     start = datetime.datetime.now()
 
-    raw_transcript, confidence = voice.recognize(punctuation=config.google.punctuation)
+    raw_transcript, confidence = voice.recognize(punctuation=config.behavior.punctuation)
 
     end = datetime.datetime.now()
     elapsed = round((end - start).total_seconds(), 1)

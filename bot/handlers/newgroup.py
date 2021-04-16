@@ -39,7 +39,7 @@ new_group = NewGroup()
 def on_new_group_chat(update: Update, _, session: Session, user: User, chat: Chat):
     logger.info("new group chat: %s", update.effective_chat.title)
 
-    if config.telegram.exit_unknown_groups and not (utilities.is_admin(update.effective_user) or user.superuser):
+    if config.behavior.exit_unknown_groups and not (utilities.is_admin(update.effective_user) or user.superuser):
         logger.info("unauthorized: leaving...")
         update.effective_chat.leave()
         chat.left = True

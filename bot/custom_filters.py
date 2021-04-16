@@ -13,7 +13,7 @@ class FromAdmin(MessageFilter):
 class VoiceTooLarge(MessageFilter):
     def filter(self, message):
         voice = message.voice or message.audio
-        return voice.file_size and voice.file_size > config.telegram.voice_max_size
+        return voice.file_size and voice.file_size > config.behavior.voice_max_size
 
 
 class Voice(MessageFilter):

@@ -104,7 +104,7 @@ def recognize_voice(
         punctuation: [bool, None] = None,
 ) -> RecogResult:
     if punctuation is None:
-        punctuation = config.google.punctuation
+        punctuation = config.behavior.punctuation
 
     if voice.short:
         text = "<i>Inizio trascrizione...</i>"
@@ -127,14 +127,14 @@ def recognize_voice(
         result.success = True
     except UnsupportedFormat:
         logger.error("unsupported format while transcribing voice %s", voice.file_path)
-        if not config.misc.keep_files_on_error:
+        if not config.behavior.keep_files_on_error:
             voice.cleanup()
 
         return result
         # return message_to_edit, None
     except Exception as e:
         logger.error("unknown exception while transcribing voice %s: ", voice.file_path, str(e))
-        if not config.misc.keep_files_on_error:
+        if not config.behavior.keep_files_on_error:
             voice.cleanup()
 
         return result
@@ -149,7 +149,7 @@ def recognize_voice(
 
     if not raw_transcript:
         logger.warning("request for voice message \"%s\" returned empty response (file not deleted)", voice.file_path)
-        if not config.misc.keep_files_on_error:
+        if not config.behavior.keep_files_on_error:
             voice.cleanup()
 
         return result
@@ -162,7 +162,7 @@ def recognize_voice(
 
     result.transcript = f"\"<i>{raw_transcript}</i>\" {result.confidence_subscript} {result.elapsed_subscript}"
 
-    if config.misc.remove_downloaded_files:
+    if config.behavior.remove_downloaded_files:
         voice.cleanup()
 
     return result

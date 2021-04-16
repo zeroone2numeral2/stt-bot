@@ -27,7 +27,7 @@ def main():
     sttbot.import_handlers(r'bot/handlers/')
     sttbot.run(
         drop_pending_updates=True,
-        show_commands=config.telegram.show_commands,
+        show_commands=config.behavior.show_commands,
         allowed_updates=["message", "callback_query", "chat_member", "my_chat_member"]
     )
 

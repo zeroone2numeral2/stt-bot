@@ -48,8 +48,8 @@ def catchexceptions(force_message_on_exception=False):
                 logger.error('error while running handler callback: %s', str(e), exc_info=True)
 
                 config_send_exception_message = (
-                    (update.effective_chat.id > 0 and not config.telegram.silence_exceptions_private)
-                    or (update.effective_chat.id < 0 and not config.telegram.silence_exceptions_group)
+                    (update.effective_chat.id > 0 and not config.behavior.silence_exceptions_private)
+                    or (update.effective_chat.id < 0 and not config.behavior.silence_exceptions_group)
                 )
                 if force_message_on_exception or config_send_exception_message:
                     text = 'An error occurred while processing the message: <code>{}</code>'.format(utilities.escape_html(str(e)))
@@ -158,9 +158,9 @@ def administrator(
                 admins_fetch_elapsed_seconds = (datetime.datetime.utcnow() - chat.last_administrators_fetch).total_seconds()
             else:
                 # if not set, force the refresh
-                admins_fetch_elapsed_seconds = (config.telegram.chat_admins_refresh * 3600) + 1
+                admins_fetch_elapsed_seconds = (config.behavior.chat_admins_refresh * 3600) + 1
 
-            cache_expired = admins_fetch_elapsed_seconds > config.telegram.chat_admins_refresh * 3600
+            cache_expired = admins_fetch_elapsed_seconds > config.behavior.chat_admins_refresh * 3600
             if (cache_expired and not skip_refresh) or not chat.chat_administrators:
                 logger.info("updating administrators, elapsed seconds: %d", admins_fetch_elapsed_seconds)
 
