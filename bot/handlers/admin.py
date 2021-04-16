@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import os
 from pprint import pformat
@@ -309,6 +310,13 @@ def on_mediainfo_command(update: Update, context: CallbackContext, session: Sess
         pass
 
 
+@decorators.catchexceptions(force_message_on_exception=True)
+def on_config_command(update: Update, context: CallbackContext):
+    logger.info("/config command")
+
+    update.message.reply_html(f"<code>config.behavior:\n\n{json.dumps(config.behavior, indent=2)}</code>")
+
+
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_group, filters=Filters.chat_type.groups & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superuser", "su"], on_superuser_command_private, filters=Filters.chat_type.private & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["superusers", "sus"], on_list_superusers_command, filters=Filters.chat_type.private & CFilters.from_admin))
@@ -318,3 +326,4 @@ sttbot.add_handler(CommandHandler("r", on_r_command, filters=Filters.reply & CFi
 sttbot.add_handler(CommandHandler(["parse", "p"], on_parse_command, filters=Filters.reply & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["testignore", "ti"], on_testignore_command, filters=Filters.chat_type.groups & Filters.reply & CFilters.from_admin))
 sttbot.add_handler(CommandHandler(["mediainfo", "mi"], on_mediainfo_command, filters=Filters.reply & CFilters.from_admin))
+sttbot.add_handler(CommandHandler(["config", "conf"], on_config_command, filters=Filters.chat_type.private & CFilters.from_admin))
