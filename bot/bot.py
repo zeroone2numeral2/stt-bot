@@ -42,7 +42,8 @@ class VoiceMessagesBot(Updater):
     USERS_COMMANDS = [
         BotCommand("start", "messaggio di benvenuto"),
         BotCommand("tips", "alcuni suggerimenti sull'utilizzo del bot"),
-        BotCommand("tos", "concedi/revoca consenso al trattamento dei tuoi dati"),
+        BotCommand("optin", "permetti al bot di trascrivere i tuoi vocali"),
+        BotCommand("optout", "il bot non trascriverà più i tuoi vocali"),
     ]
     ADMINS_COMMANDS = [
         BotCommand("superuser", "promuovi/depromuovi utente a superuser"),
