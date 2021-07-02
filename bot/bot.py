@@ -5,9 +5,12 @@ import re
 from pathlib import Path
 
 # noinspection PyPackageRequirements
+from telegram.error import BadRequest
 from telegram.ext import Updater, ConversationHandler
 # noinspection PyPackageRequirements
-from telegram import BotCommand
+from telegram import BotCommand, BotCommandScopeAllPrivateChats, BotCommandScopeAllGroupChats, BotCommandScopeChat
+
+from config import config
 
 logger = logging.getLogger(__name__)
 
@@ -36,10 +39,19 @@ class DummyContext:
 
 class VoiceMessagesBot(Updater):
     COMMANDS_LIST_REMOVE = []
-    COMMANDS_LIST = [
+    USERS_COMMANDS = [
         BotCommand("start", "messaggio di benvenuto"),
         BotCommand("tips", "alcuni suggerimenti sull'utilizzo del bot"),
         BotCommand("tos", "concedi/revoca consenso al trattamento dei tuoi dati"),
+    ]
+    ADMINS_COMMANDS = [
+        BotCommand("superuser", "promuovi/depromuovi utente a superuser"),
+        BotCommand("superusers", "elenca superusers"),
+        BotCommand("cleandl", "elimina file scaricati"),
+        BotCommand("parse", "esegui il parsing di un vocale"),
+        BotCommand("ti", "testa se un vocale dovrebbe essere ignorato in un gruppo"),
+        BotCommand("mi", "output di mediainfo per un vocale"),
+        BotCommand("config", "mostra config.toml[behavior]"),
     ]
 
     @staticmethod
@@ -112,12 +124,23 @@ class VoiceMessagesBot(Updater):
             logger.debug('importing module: %s', import_path)
             importlib.import_module(import_path)
 
-    def set_commands(self, show=True):
-        self.bot.set_my_commands(self.COMMANDS_LIST if show else [])
+    def set_commands(self):
+        self.bot.set_my_commands(self.USERS_COMMANDS, scope=BotCommandScopeAllPrivateChats())
+        self.bot.set_my_commands([], scope=BotCommandScopeAllGroupChats())
 
-    def run(self, *args, show_commands=True, **kwargs):
-        logger.info('updating commands list (show: %s)...', show_commands)
-        self.set_commands(show_commands)
+        admin_commands = self.USERS_COMMANDS + self.ADMINS_COMMANDS
+        for admin_id in config.telegram.admins:
+            try:
+                self.bot.set_my_commands(admin_commands, scope=BotCommandScopeChat(chat_id=admin_id))
+            except BadRequest as e:
+                if "chat not found" in e.message.lower():
+                    logger.warning("make sure admin <%d> started me!", admin_id)
+                else:
+                    raise
+
+    def run(self, *args, **kwargs):
+        logger.info('updating commands list...')
+        self.set_commands()
 
         logger.info("allowed updates: %s", ", ".join(kwargs["allowed_updates"] if "allowed_updates" in kwargs else "?"))
 

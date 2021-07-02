@@ -5,7 +5,6 @@ admins = [23646077]
 persistence = "persistence/data.pickle" # keep empty to disable percistency of temporary data (chat_data/user_data)
 
 [behavior]
-show_commands = false # show commands popup when "/" is typed
 exit_unknown_groups = true # exit groups when added by non-admins/non-superusers
 voice_max_size = 10000000 # 10 mb
 silence_exceptions_private = false # do not send a message if an exception happens in private
