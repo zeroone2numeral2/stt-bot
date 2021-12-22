@@ -124,6 +124,10 @@ def recognize_voice(
 
     try:
         raw_transcript, confidence = voice.recognize(punctuation=punctuation)
+        if not raw_transcript:
+            logger.info("raw transcript evaluates to None")
+            return result
+
         result.success = True
     except UnsupportedFormat:
         logger.error("unsupported format while transcribing voice %s", voice.file_path)
