@@ -47,9 +47,9 @@ class VoiceMessage:
             file_name: str,
             duration: int,
             download_dir='downloads',
-            force_sample_rate: [int, None] = None,
-            max_alternatives: [int, None] = None,
-            audio_encoding: [None, RecognitionConfig.AudioEncoding] = None
+            force_sample_rate: Optional[int] = None,
+            max_alternatives: Optional[int] = None,
+            audio_encoding: Optional[RecognitionConfig.AudioEncoding] = None
     ):
         if duration is None:
             raise ValueError("the voice message duration must be provided")
@@ -65,8 +65,8 @@ class VoiceMessage:
         self.forced_sample_rate = force_sample_rate
         self.client: SpeechClient = speech_client
         self.max_alternatives = max_alternatives
-        self.recognition_audio: [RecognitionAudio, None] = None
-        self.recognition_config: [RecognitionConfig, None] = None
+        self.recognition_audio: Optional[RecognitionAudio] = None
+        self.recognition_config: Optional[RecognitionConfig] = None
         self.parsed_header_data = {}
 
         if self.duration > 59:
@@ -142,7 +142,7 @@ class VoiceMessage:
         raise NotImplementedError("this method must be overridden")
 
     @staticmethod
-    def _refactor_response_result(response: [RecognizeResponse, LongRunningRecognizeResponse]) -> Tuple[str, float]:
+    def _refactor_response_result(response: Union[RecognizeResponse, LongRunningRecognizeResponse]) -> Tuple[str, float]:
         transcript = ""
         confidences = {}  # {confidence: words count}, if the transcription is returned as multiple results
         average_confidence = None  # if the transcription is returned as one result
@@ -184,7 +184,7 @@ class VoiceMessage:
 
         return transcript.strip(), round(average_confidence, 2)
 
-    def _recognize_short(self, timeout=360) -> Tuple[Union[str, None], Union[float, None]]:
+    def _recognize_short(self, timeout=360) -> Tuple[Optional[str], Optional[float]]:
         logger.debug("standard (short) operation, timeout: %d", timeout)
 
         response: RecognizeResponse = self.client.recognize(
@@ -199,7 +199,7 @@ class VoiceMessage:
 
         return self._refactor_response_result(response)
 
-    def _recognize_long(self, timeout=360) -> Tuple[Union[str, None], Union[float, None]]:
+    def _recognize_long(self, timeout=360) -> Tuple[Optional[str], Optional[float]]:
         logger.debug("long running operation, timeout: %d", timeout)
 
         operation = self.client.long_running_recognize(
