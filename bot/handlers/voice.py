@@ -82,11 +82,11 @@ def on_voice_message_group_chat(update: Update, _, session: Session, user: User,
     if ignore_message:
         return
 
-    update.message.chat.send_chat_action(ChatAction.TYPING)
-
     if update.message.voice.file_size and update.message.voice.file_size > config.behavior.voice_max_size:
         logger.info("voice message is too large (%d bytes)", update.message.voice.file_size)
         return
+
+    update.message.chat.send_chat_action(ChatAction.TYPING)
 
     voice = VoiceMessageLocal.from_message(update.message, download=True)
 
