@@ -1,7 +1,7 @@
 import datetime
 import logging
 import time
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional, List
 
 from sqlalchemy.orm import Session
 # noinspection PyPackageRequirements
@@ -23,13 +23,20 @@ SUBSCRIPT = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")  # htt
 
 
 class RecogResult:
-    def __init__(self, message_to_edit=None, raw_transcript=None, confidence=None, elapsed=None, transcription=None):
-        self.message_to_edit: [Message, None] = message_to_edit
-        self._raw_transcript: [str, None] = raw_transcript
-        self.transcript_slices = []
-        self.confidence: [float, None] = confidence
-        self.elapsed: [float, None] = elapsed
-        self.transcript: [str, None] = transcription
+    def __init__(
+            self,
+            message_to_edit: Optional[Message] = None,
+            raw_transcript: Optional[str] = None,
+            confidence: Optional[float] = None,
+            elapsed: Optional[float] = None,
+            transcription: Optional[str] = None
+    ):
+        self.message_to_edit: Optional[Message] = message_to_edit
+        self._raw_transcript: Optional[str] = raw_transcript
+        self.transcript_slices: List = []
+        self.confidence: Optional[float] = confidence
+        self.elapsed: Optional[float] = elapsed
+        self.transcript: Optional[str] = transcription
         self.success = False
 
         if self._raw_transcript:
@@ -98,10 +105,10 @@ class RecogResult:
 
 
 def recognize_voice(
-        voice: [VoiceMessageLocal, VoiceMessageRemote],
+        voice: Union[VoiceMessageLocal, VoiceMessageRemote],
         update: Update,
         session: Session,
-        punctuation: [bool, None] = None,
+        punctuation: Optional[bool] = None,
 ) -> RecogResult:
     if punctuation is None:
         punctuation = config.behavior.punctuation
