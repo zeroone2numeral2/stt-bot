@@ -135,14 +135,12 @@ def recognize_voice(
             voice.cleanup()
 
         return result
-        # return message_to_edit, None
     except Exception as e:
         logger.error("unknown exception while transcribing voice %s: ", voice.file_path, str(e))
         if not config.behavior.keep_files_on_error:
             voice.cleanup()
 
         return result
-        # return message_to_edit, None
 
     result.raw_transcript = raw_transcript
     result.confidence = confidence
