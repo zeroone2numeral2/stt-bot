@@ -4,7 +4,7 @@ import logging
 import re
 import struct
 import time
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 
 # noinspection PyPackageRequirements
 from google.cloud.storage import Client as StorageClient
@@ -285,7 +285,7 @@ class VoiceMessage:
                 "mapping_type": mapping_type
             }
 
-    def recognize(self, max_alternatives: [int, None] = None, punctuation: bool = True, *args, **kwargs) -> Tuple[Union[str, None], Union[float, None]]:
+    def recognize(self, max_alternatives: Optional[int] = None, punctuation: bool = True, *args, **kwargs) -> Tuple[Optional[str], Optional[float]]:
         self._generate_recognition_audio()
 
         self.parse_sample_rate()
