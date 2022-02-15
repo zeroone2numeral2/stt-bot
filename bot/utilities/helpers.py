@@ -119,7 +119,7 @@ def recognize_voice(
         avg_response_time = transcription_request.estimated_duration(session, voice.duration)
         text = "<i>Inizio trascrizione... Per i vocali >1 minuto potrebbe volerci un po' di più</i>"
         if avg_response_time:
-            text = text.replace("</i>", f" (stimato: {round(avg_response_time, 1)}\")</i>")
+            text = text.replace("</i>", f" (stimato: {round(avg_response_time, 1)} s)</i>")
 
     message_to_edit = update.message.reply_html(text, disable_notification=True, quote=True)
 
