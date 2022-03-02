@@ -145,8 +145,10 @@ class VoiceMessagesBot(Updater):
 
         logger.info("allowed updates: %s", ", ".join(kwargs["allowed_updates"] if "allowed_updates" in kwargs else "?"))
 
-        logger.info('running as @%s', self.bot.username)
         self.start_polling(*args, **kwargs)
+        logger.info("stopping job queue's thread...")
+        self.job_queue.stop()
+        logger.info('running as @%s', self.bot.username)
         self.idle()
 
     def add_handler(self, *args, **kwargs):
